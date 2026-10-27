@@ -5,6 +5,7 @@ import { AppShell } from './app/AppShell';
 import { CityCommand } from './pages/CityCommand';
 import { ZoneIntelligence } from './pages/ZoneIntelligence';
 import { NodeDiagnostics } from './pages/NodeDiagnostics';
+import { NodeDirectory } from './pages/NodeDirectory';
 import { Events } from './pages/Events';
 import { Reports } from './pages/Reports';
 
@@ -35,7 +36,7 @@ export function App() {
             <Route path="/" element={<CityCommand />} />
             <Route path="/zones" element={<Navigate to="/zones/Z-CENTRAL" replace />} />
             <Route path="/zones/:zoneId" element={<ZoneIntelligence />} />
-            <Route path="/nodes" element={<Navigate to="/nodes/AN-J-014" replace />} />
+            <Route path="/nodes" element={<NodeDirectory />} />
             <Route path="/nodes/:nodeId" element={<NodeDiagnostics />} />
             <Route path="/events" element={<Events />} />
             <Route path="/reports" element={<Reports />} />
