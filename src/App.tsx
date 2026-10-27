@@ -8,6 +8,7 @@ import { ZoneOverview } from './pages/ZoneOverview';
 import { NodeDiagnostics } from './pages/NodeDiagnostics';
 import { NodeDirectory } from './pages/NodeDirectory';
 import { NodeComparison } from './pages/NodeComparison';
+import { NetworkInventory } from './pages/NetworkInventory';
 import { Events } from './pages/Events';
 import { Reports } from './pages/Reports';
 
@@ -40,6 +41,7 @@ export function App() {
             <Route path="/zones/:zoneId" element={<ZoneIntelligence />} />
             <Route path="/nodes" element={<NodeDirectory />} />
             <Route path="/compare" element={<NodeComparison />} />
+            <Route path="/network" element={<NetworkInventory />} />
             <Route path="/nodes/:nodeId" element={<NodeDiagnostics />} />
             <Route path="/events" element={<Events />} />
             <Route path="/reports" element={<Reports />} />
