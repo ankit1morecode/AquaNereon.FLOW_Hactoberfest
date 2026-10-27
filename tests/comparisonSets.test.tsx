@@ -36,10 +36,11 @@ describe('named comparison sets', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Save comparison set' }));
     const id = store.getSnapshot().sets[0].id;
     view.unmount();
-    render(<SavedComparisonSets ids={[]} onLoad={onLoad} store={store} />);
+    const remounted = render(<SavedComparisonSets ids={[]} onLoad={onLoad} store={store} />);
     fireEvent.change(screen.getByLabelText('Saved comparison sets'), { target: { value: id } });
     expect(onLoad).toHaveBeenCalledWith(['B', 'A']);
     expect(screen.getByText(/kept for this session/)).toBeTruthy();
+    remounted.rerender(<SavedComparisonSets ids={['B', 'A']} onLoad={onLoad} store={store} />);
     fireEvent.click(screen.getByRole('button', { name: 'Delete comparison set' }));
     expect(store.getSnapshot().sets).toEqual([]);
   });
@@ -50,5 +51,15 @@ describe('named comparison sets', () => {
     expect(store.save('Overflow', ['A', 'B']).error).toContain('12');
     expect(store.save('Set 0', ['B', 'A']).error).toBeNull();
     expect(store.getSnapshot().sets).toHaveLength(12);
+  });
+  it('does not label a manually changed selection as the previously loaded set', () => {
+    const storage = memory();
+    const store = createComparisonSets(() => storage);
+    const result = store.save('Feeders', ['B', 'A']);
+    const view = render(<SavedComparisonSets ids={['B', 'A']} onLoad={vi.fn()} store={store} />);
+    expect((screen.getByLabelText('Saved comparison sets') as HTMLSelectElement).value).toBe(result.id);
+    view.rerender(<SavedComparisonSets ids={['B', 'C']} onLoad={vi.fn()} store={store} />);
+    expect((screen.getByLabelText('Saved comparison sets') as HTMLSelectElement).value).toBe('');
+    expect((screen.getByRole('button', { name: 'Delete comparison set' }) as HTMLButtonElement).disabled).toBe(true);
   });
 });

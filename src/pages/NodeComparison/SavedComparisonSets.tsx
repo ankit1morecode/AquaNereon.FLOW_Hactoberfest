@@ -8,7 +8,8 @@ export function SavedComparisonSets({ ids, onLoad, store = comparisonSets }: {
   const [name, setName] = useState('');
   const [selectedId, setSelectedId] = useState('');
   const [message, setMessage] = useState('');
-  const active = saved.sets.find((entry) => entry.id === selectedId);
+  const matches = (entry: { nodeIds: string[] }) => entry.nodeIds.length === ids.length && entry.nodeIds.every((id, index) => id === ids[index]);
+  const active = saved.sets.find((entry) => entry.id === selectedId && matches(entry)) ?? saved.sets.find(matches);
   return <div className="saved-comparison-sets">
     <div className="node-tools">
       <label>Saved comparison sets<select value={active?.id ?? ''} onChange={(event) => {

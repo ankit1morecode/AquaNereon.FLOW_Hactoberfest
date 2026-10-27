@@ -1,6 +1,6 @@
 /** @vitest-environment jsdom */
 import { afterEach, describe, expect, it } from 'vitest';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { ApiProvider } from '../src/services/ApiProvider';
 import { NodeComparison } from '../src/pages/NodeComparison';
@@ -45,5 +45,17 @@ describe('node comparison', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Compare selected (3/3)' }));
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Compare nodes' })).toBeTruthy());
     expect(screen.getByRole('table').querySelectorAll('thead th')).toHaveLength(4);
+  });
+  it('retains changes to multiple selectors before the router commits', async () => {
+    render(<MemoryRouter initialEntries={['/compare?node=AN-J-002&node=AN-J-005']}><ApiProvider><NodeComparison /></ApiProvider></MemoryRouter>);
+    await screen.findByRole('table');
+    act(() => {
+      fireEvent.change(screen.getByRole('combobox', { name: 'Node 1 (reference)' }), { target: { value: 'AN-J-008' } });
+      fireEvent.change(screen.getByRole('combobox', { name: 'Node 2' }), { target: { value: 'AN-J-010' } });
+    });
+    expect(screen.getByRole('link', { name: 'AN-J-008' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'AN-J-010' })).toBeTruthy();
+    expect(screen.queryByRole('link', { name: 'AN-J-002' })).toBeNull();
+    expect(screen.queryByRole('link', { name: 'AN-J-005' })).toBeNull();
   });
 });

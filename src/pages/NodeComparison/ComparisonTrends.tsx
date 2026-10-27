@@ -26,7 +26,7 @@ function LoadedTrends({ ids }: { ids: string[] }) {
     {history.data && <ul className="comparison-history-notes">{history.data.map((entry, index) => <li key={entry.nodeId}>
       <strong>{entry.nodeId}{index === 0 ? ' (reference)' : ''}</strong>: {entry.error ? `History unavailable: ${entry.error}` : `${series[index].points.length} usable ${label.toLowerCase()} samples`}
       {entry.omitted > 0 && `; ${entry.omitted} samples omitted because the node or timestamp did not match.`}
-      {entry.signatures.some((signature) => signature.data_quality.stale) && '; includes samples flagged stale by the source.'}
+      {entry.signatures.some((signature) => signature.data_quality?.stale) && '; includes samples flagged stale by the source.'}
     </li>)}</ul>}
     <p className="node-results">Each point keeps its recorded timestamp; nodes are not resampled into simultaneous readings. Times use your local clock. This comparison covers only loaded signatures.</p>
   </Panel>;

@@ -32,7 +32,7 @@ export function comparisonTrendSeries(history: ComparisonHistory[], metric: Comp
     label: `${entry.nodeId}${index === 0 ? ' (reference)' : ''}`,
     color: ['var(--a)', 'var(--b)', '#b4a1f7'][index % 3],
     points: entry.signatures.map((signature) => ({ x: Date.parse(signature.timestamp),
-      y: metric === 'baseline' ? signature.baseline_distance : metric === 'flow' ? signature.hydraulic.flow_mean : signature.hydraulic.pressure_mean,
+      y: metric === 'baseline' ? signature.baseline_distance : metric === 'flow' ? signature.hydraulic?.flow_mean : signature.hydraulic?.pressure_mean,
     })).filter((point) => Number.isFinite(point.x) && Number.isFinite(point.y)),
   }));
 }

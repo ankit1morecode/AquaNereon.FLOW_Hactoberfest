@@ -1,14 +1,16 @@
 import { useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { useQuery } from '../../services/ApiProvider';
+import { useApi, useQuery } from '../../services/ApiProvider';
 import { Empty, ErrorNote, Loading, Panel, StateBadge, relativeTime } from '../../components/ui';
 import { comparisonIds, designUtilization, signedDifference } from './comparison';
 import { ComparisonTrends } from './ComparisonTrends';
 import { SavedComparisonSets } from './SavedComparisonSets';
+import { ComparisonCsvExport } from './ComparisonCsvExport';
 import '../NodeDirectory/nodes.css';
 
 export function NodeComparison() {
   const [params, setParams] = useSearchParams();
+  const client = useApi();
   const nodes = useQuery((c) => c.getNodes(), []);
   const ids = comparisonIds(params);
   const committedIds = JSON.stringify(ids);
@@ -45,6 +47,7 @@ export function NodeComparison() {
         <button className="btn" type="button" onClick={() => applyIds([])}>Clear comparison</button>
       </div>
       <SavedComparisonSets ids={selected.map((node) => node.node_id)} onLoad={applyIds} />
+      <ComparisonCsvExport nodes={selected} source={client} error={nodes.error} />
       <p className="node-results">The address contains your selected nodes; copy it to share this comparison. Readings continue to update.</p>
       {unknown.length > 0 && <p className="node-results" role="status">Unavailable nodes: {unknown.join(', ')}. Select a replacement above.</p>}
       {selected.length < 2 && <Empty>Select at least two nodes to compare. You can compare up to three.</Empty>}
