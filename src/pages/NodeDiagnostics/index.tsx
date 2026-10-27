@@ -9,6 +9,7 @@ import { JunctionPreview } from '../../components/JunctionPreview';
 import { TimeSeriesChart } from '../../components/charts';
 import { TelemetryWindowControls } from '../../components/TelemetryWindowControls';
 import { TelemetryCsvExport } from '../../components/TelemetryCsvExport';
+import { DeviceHealthPanel } from '../../components/DeviceHealthPanel';
 import { useTelemetryWindow } from '../../services/telemetryWindow';
 import {
   Empty,
@@ -22,7 +23,6 @@ import {
   STATE_CLASS,
   STATE_LABEL,
   clockTime,
-  relativeTime,
 } from '../../components/ui';
 import type { CommandAck, SamplingMode } from '../../types';
 
@@ -537,39 +537,9 @@ export function NodeDiagnostics() {
             </ul>
           )}
 
-          {health.data && (
-            <>
-              <h4 className="nd-sub">Hardware</h4>
-              <dl className="nd-health-grid">
-                <div>
-                  <dt>Sensors</dt>
-                  <dd>{health.data.sensor_status}</dd>
-                </div>
-                <div>
-                  <dt>Comms</dt>
-                  <dd>{health.data.communication_status}</dd>
-                </div>
-                <div>
-                  <dt>Packet loss</dt>
-                  <dd>{(health.data.packet_loss * 100).toFixed(1)}%</dd>
-                </div>
-                <div>
-                  <dt>Telemetry age</dt>
-                  <dd>{health.data.telemetry_age_sec.toFixed(1)} s</dd>
-                </div>
-                <div>
-                  <dt>Calibration</dt>
-                  <dd>{health.data.calibration_status}</dd>
-                </div>
-                <div>
-                  <dt>Last seen</dt>
-                  <dd>{relativeTime(node.last_seen)}</dd>
-                </div>
-              </dl>
-            </>
-          )}
         </Panel>
       </div>
+      <DeviceHealthPanel nodeId={nodeId} report={health.data} quality={sig.data_quality} error={health.error} sourceMode={client.mode} />
     </div>
   );
 }
