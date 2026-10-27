@@ -1,0 +1,27 @@
+# dependencies
+node_modules
+
+# build output
+dist
+.vite
+
+# local tooling artefacts
+.probe.mjs
+*.local
+*.log
+
+# editor / OS
+.DS_Store
+Thumbs.db
+.idea
+.vscode/*
+!.vscode/extensions.json
+
+# TypeScript incremental build cache
+*.tsbuildinfo
+
+# Local environment files, including API keys
+.env
+.env.local
+.env.*.local
+!.env.example
