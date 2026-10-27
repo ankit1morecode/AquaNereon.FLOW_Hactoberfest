@@ -2,6 +2,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '../../services/ApiProvider';
 import { Empty, ErrorNote, Loading, Panel, StateBadge, relativeTime } from '../../components/ui';
 import { comparisonIds, designUtilization, signedDifference } from './comparison';
+import { ComparisonTrends } from './ComparisonTrends';
 import '../NodeDirectory/nodes.css';
 
 export function NodeComparison() {
@@ -52,5 +53,6 @@ export function NodeComparison() {
         </tbody>
       </table></div>}
     </Panel>
+    <ComparisonTrends ids={selected.map((node) => node.node_id)} />
   </div>;
 }
