@@ -2,6 +2,7 @@ import { useCallback, useEffect } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useApi, useQuery } from '../services/ApiProvider';
 import { PageErrorBoundary } from './PageErrorBoundary';
+import { CommandPalette } from './CommandPalette';
 import { STATE_CLASS, STATE_LABEL, clockTime } from '../components/ui';
 
 /**
@@ -18,7 +19,8 @@ import { STATE_CLASS, STATE_LABEL, clockTime } from '../components/ui';
 const NAV = [
   { to: '/', label: 'City Command', end: true },
   { to: '/zones', label: 'Zone Intelligence' },
-  { to: '/nodes', label: 'Node Diagnostics' },
+  { to: '/nodes', label: 'Nodes' },
+  { to: '/compare', label: 'Compare' },
   { to: '/events', label: 'Events' },
   { to: '/reports', label: 'Reports' },
 ];
@@ -135,6 +137,8 @@ export function AppShell() {
           {o && <span className="shell-clock">{clockTime(o.timestamp)}</span>}
         </div>
       </header>
+
+      <div className="operator-tools"><CommandPalette /></div>
 
       <main className="shell-main">
         {/* Keyed on the route, so a page that throws is not a trap: navigating

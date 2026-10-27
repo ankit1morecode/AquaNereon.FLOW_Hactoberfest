@@ -16,7 +16,7 @@
  * structural must not move the camera, must not replace a layer, and must not
  * write styles — while a real change to what is being framed still must.
  */
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest';
 import { act, cleanup, render } from '@testing-library/react';
 import L from 'leaflet';
 
@@ -136,8 +136,8 @@ function event(over: Partial<WaterEvent> = {}): WaterEvent {
 
 /* ------------------------------------------------------------------ */
 
-let fitBounds: ReturnType<typeof vi.spyOn>;
-let setStyle: ReturnType<typeof vi.spyOn>;
+let fitBounds: MockInstance<L.Map['fitBounds']>;
+let setStyle: MockInstance<L.Path['setStyle']>;
 /** Captured from the first framing call; Leaflet keeps no back-pointer. */
 let mapInstance: L.Map | null = null;
 
