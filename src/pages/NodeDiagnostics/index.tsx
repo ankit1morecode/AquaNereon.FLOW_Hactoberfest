@@ -8,6 +8,7 @@ import { AssessmentPanel } from '../../components/AssessmentPanel';
 import { JunctionPreview } from '../../components/JunctionPreview';
 import { TimeSeriesChart } from '../../components/charts';
 import { TelemetryWindowControls } from '../../components/TelemetryWindowControls';
+import { TelemetryCsvExport } from '../../components/TelemetryCsvExport';
 import { useTelemetryWindow } from '../../services/telemetryWindow';
 import {
   Empty,
@@ -270,6 +271,7 @@ export function NodeDiagnostics() {
       {/* --- 4. raw traces --- */}
       <Panel title="Telemetry workspace" subtitle="Freeze and time windows apply to the raw traces below. Live assessments above continue updating.">
         <TelemetryWindowControls window={traceWindow} />
+        <TelemetryCsvExport key={nodeId} frames={frames} scope={{ nodeId, sourceMode: client.mode, range: traceWindow.range, capturedAt: traceWindow.capturedAt }} />
         {telemetry.error && <ErrorNote error={telemetry.error} />}
       </Panel>
       <div className="nd-row nd-traces">
