@@ -1,13 +1,15 @@
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { useQuery } from '../../services/ApiProvider';
+import { useApi, useQuery } from '../../services/ApiProvider';
 import { NetworkMap } from '../../components/NetworkMap';
 import { NodeStatus } from '../../components/NodeStatus';
 import { EventTimeline } from '../../components/EventTimeline';
 import { ForecastChart } from '../../components/ForecastChart';
 import { ScenarioPlanner } from './ScenarioPlanner';
+import { ForecastExport } from './ForecastExport';
 import { TimeSeriesChart } from '../../components/charts';
 import {
   ErrorNote,
+  Empty,
   Loading,
   Meter,
   Metric,
@@ -29,6 +31,7 @@ import {
 export function ZoneIntelligence() {
   const { zoneId } = useParams<{ zoneId: string }>();
   const navigate = useNavigate();
+  const client = useApi();
 
   const zones = useQuery((c) => c.getZones(), []);
   const nodes = useQuery((c) => c.getNodes(), []);
@@ -45,6 +48,7 @@ export function ZoneIntelligence() {
   const active = zones.data.find((z) => z.zone_id === zoneId);
   if (!active) return <div className="page"><Panel title="Zone unavailable"><p>The requested zone is not in the loaded network.</p><Link to="/zones">View all zones</Link></Panel></div>;
   const zoneNodes = nodes.data.filter((n) => n.zone_id === active.zone_id);
+  const zoneForecast = forecast.data?.find((item) => item.scope === 'ZONE' && item.target_id === active.zone_id);
 
   const consumption = active.consumption_series;
   const t0 = consumption.length ? new Date(consumption[0].t).getTime() : Date.now();
@@ -142,16 +146,18 @@ export function ZoneIntelligence() {
           )}
         </Panel>
 
-        <Panel title="Demand forecast" subtitle="24-hour horizon">
-          {forecast.data?.[0] ? (
+        <Panel title="Demand forecast" subtitle={zoneForecast ? `${zoneForecast.horizon_hours}-hour horizon` : 'Forecast for this zone'}
+          actions={<ForecastExport key={active.zone_id} forecast={zoneForecast} zoneId={active.zone_id} source={client} error={forecast.error} />}>
+          {forecast.error ? <ErrorNote error={forecast.error} /> : zoneForecast ? (
             <ForecastChart
-              forecast={forecast.data[0]}
+              forecast={zoneForecast}
               supplyLps={active.supply_lps}
               height={180}
             />
-          ) : (
+          ) : !forecast.data ? (
             <Loading what="forecast" />
-          )}
+          ) : <Empty>No forecast is available for this zone.</Empty>}
+          {zoneForecast && <p className="zone-forecast-scope">Loaded forecast {zoneForecast.forecast_id} · model {zoneForecast.model_id} · issued {zoneForecast.issued_at} · {zoneForecast.forecast.length} forecast points. CSV includes source mode, reported intervals and loaded history; missing bounds remain empty.</p>}
         </Panel>
       </div>
 
