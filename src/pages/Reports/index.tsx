@@ -3,6 +3,7 @@ import { useApi, useQuery } from '../../services/ApiProvider';
 import { filterReportEvents, reportFilterError, reportStatistics } from '../../services/reportFilters';
 import { buildIncidentHandoff } from '../../services/incidentHandoff';
 import { IncidentAnalytics } from './IncidentAnalytics';
+import { PeriodComparison } from './PeriodComparison';
 import './reports.css';
 import { EventTimeline } from '../../components/EventTimeline';
 import { BarRow, TimeSeriesChart } from '../../components/charts';
@@ -153,6 +154,7 @@ export function Reports() {
       </div>
 
       <IncidentAnalytics events={filtered} zones={zones.data ?? []} />
+      <PeriodComparison events={all} filters={{ status: window, startDate, endDate }} availableCount={availableCount} />
 
       <div className="rp-main">
         <Panel
