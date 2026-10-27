@@ -1,82 +1,40 @@
-# AquaNereon.FLOW — Urban Water Intelligence Frontend
+# AquaNereon.FLOW — AI-Powered Urban Water Intelligence
 
-The full operator frontend for the AquaNereon.FLOW platform: five screens from
-the software dossier (§27), the seven named components, a typed client covering
-every REST endpoint in §23 and the MQTT topic design in §24 — and the 3D
-hydraulic visualization embedded where it belongs, on the node it describes.
+> **Understand water's behaviour. Detect emerging risks earlier. Enable smarter water management.**
 
-```bash
-npm install
-npm run dev        # http://localhost:5178
-npm test           # physics, measurement chain, services, components and operator tools
-npm run probe      # headless walk-through of the three flow scenarios
-npm run build
-```
+AquaNereon.FLOW is a cyber-physical water intelligence platform that combines hydraulic-junction sensing, circumferential sensor measurements, flow-behaviour signatures, and predictive AI to help operators understand what is happening across an urban water network. Rather than relying only on isolated readings or fixed thresholds, it studies how water behaves, how that behaviour changes over time, and how events relate across connected parts of the network.
 
-It runs with no backend. A platform simulator advances twenty-one nodes in the
-browser and serves them through the same `ApiClient` interface the HTTP client
-implements, which is what the dossier asks for when it says simulation must use
-the production ingestion and query contracts (§16, §30.2).
+The platform is designed to support earlier investigation of abnormal flow patterns, possible leakage-related disturbances, changing water demand, and potential supply shortages. Its alerts are evidence-backed decision support: an anomaly indicates behaviour that needs investigation, not automatic proof of a specific cause.
 
-```bash
-# Point it at a real backend instead — this is the whole switch.
-VITE_API_BASE_URL=https://backend/api/v1 npm run dev
-```
+## Purpose
 
-Copy `.env.example` to `.env.local` for basemap keys and the backend URL.
+To turn water-network measurements into meaningful, timely intelligence so operators can identify developing problems, understand their possible network context, and make better-informed decisions.
 
-## First feature batch
+## Vision
 
-This repository includes the current project and ten independently committed features:
+A future where urban water networks are more observable, resilient, and efficient—helping communities and utilities protect water resources through proactive, data-informed management.
 
-1. **Node directory** (`/nodes`): search IDs, locations and addresses; filter by zone or state; sort by ID, anomaly or flow. Filters stay in the URL.
-2. **Node watchlist**: star important junctions and filter to watched nodes. Saves in this browser, with session fallback when storage is unavailable.
-3. **Node comparison** (`/compare`): choose up to three nodes from the directory or comparison selectors. Live flow, anomaly and design utilization appear side by side; the first node is the reference for differences. URLs preserve the selection.
-4. **Event search and sorting**: combine search, severity, status and zone filters; order by priority, newest, oldest or anomaly. Share the URL to retain the query.
-5. **Saved event views**: save, restore, update or delete named filter combinations in this browser.
-6. **Event CSV export**: download exactly the filtered rows in their displayed order, with quoted cells and spreadsheet formula protection.
-7. **Report date range**: inclusive local calendar dates and status filters apply to incident metrics, distributions, history, linked interventions and JSON export.
-8. **Incident handoff**: export a Markdown report with source mode, selected scope, incident facts, evidence, model assessments, action recommendations and verification references.
-9. **Quick navigation**: click Search or press Ctrl+K / ⌘K to find pages and nodes. Use arrow keys, Enter and Escape inside the dialog.
-10. **Simulation playback**: pause, resume, select 1×–24× speed, or advance one simulated second while paused. Controls appear only in simulation mode and preserve the running model and history.
+## Mission
 
-Event tools operate on the loaded subset (up to 200 events on Events and Reports). Report scope and exported handoffs disclose the loaded and available counts. Browser-saved watchlists and views are local preferences. The platform still uses the existing API contracts for live backend data.
+- **Sense water behaviour:** combine circumferential sensor-ring data with relevant flow, pressure, acoustic, and water-property measurements.
+- **Recognize meaningful change:** generate flow signatures and compare them with contextual baselines to identify drift and emerging disturbances.
+- **Connect the network:** interpret sensor evidence in the context of connected junctions, pipes, zones, supply, and demand.
+- **Support prediction and action:** provide forecasts, risk priorities, explainable alerts, and recommendations that operators can investigate and verify.
+- **Build responsibly:** clearly distinguish simulated demonstrations from live data and communicate uncertainty instead of overstating what an alert proves.
 
-The copied project excludes private environment files, dependencies and build output. Run `npm ci` after cloning, then `npm run dev`.
+## How it works
 
-## Second feature batch
+**Sense → Characterize → Contextualize → Predict → Decide → Verify**
 
-The next ten features each have their own commit:
+Sensors capture water-flow behaviour at diagnostic junctions. The software transforms measurements into flow signatures, compares them with expected behaviour, and combines the results with network context and predictive models. Operators receive prioritized information and can verify outcomes through subsequent measurements.
 
-11. **Telemetry windows and capture**: Node Diagnostics can show all loaded samples or the latest 15/60 seconds. Freeze captures the raw traces and their water-property metrics; the live signature, assessment and 3D view continue updating. Changing nodes clears the capture.
-12. **Telemetry CSV**: export the displayed live or frozen samples, with source mode, capture scope, UTC and original timestamps, branch flow/pressure, water properties, all sensor channels and data-quality flags.
-13. **Device health details**: reported sensor, power, communication and calibration health, telemetry age, packet loss, battery/RSSI when provided, report freshness and signature quality. Missing optional measurements remain unavailable.
-14. **Zone overview** (`/zones`): search and rank zones by demand, shortage risk, inferred loss or supply margin; open their detail, nodes or events.
-15. **Demand scenario planner**: adjust local supply and demand percentages against the current zone baseline. Balance and coverage use supply × (1 − inferred loss fraction), with the loss fraction held fixed. Reset restores the baseline inputs.
-16. **Forecast CSV**: download the selected zone's loaded prediction, optional interval bounds and history, with source/model/horizon metadata and original plus UTC timestamps.
-17. **Local incident notebook**: add, edit and delete notes scoped to an incident and node. Each incident supports up to 50 notes of 2,000 characters. Browser storage has a session fallback.
-18. **Event bookmarks**: save incidents locally and show bookmarked loaded events through a URL-backed filter. Existing search, sorting and CSV export apply to that subset.
-19. **Alert inbox**: review open high-priority incidents or incidents on watched nodes, switch to all open events, mark shown alerts as read, and open the incident directly. Read markers and inbox scope persist in this browser.
-20. **Feed freshness and recovery**: see API refresh age, browser connection failures and cached-data status. Refresh all mounted queries manually; reconnect triggers a refresh. Queries clear the previous asset when the route changes and ignore late replies.
+## What makes it different
 
-The notebook, bookmarks and inbox read markers are browser-local operator aids. Notes are separate from backend event records. Telemetry and forecast exports describe only the samples or horizons returned by the API. The scenario planner performs local arithmetic and sends no network commands.
-
-## Third feature batch
-
-21. **Comparison trends**: overlay up to three nodes' loaded signature histories by actual timestamps. Switch between baseline distance, flow and pressure; partial failures and mismatched-node data are disclosed.
-22. **Named comparison sets**: save, restore, update and delete browser-local node selections while preserving the first node as the reference. Storage validation and a session fallback keep saved selections usable.
-23. **Comparison snapshot CSV**: export the currently loaded comparison rows in table order, with reference differences, design utilization, source/capture metadata and original plus UTC last-seen timestamps.
-24. **Incident report breakdowns**: severity and zone distributions plus local-calendar daily event counts follow the report's existing status/date filters and loaded-event scope.
-25. **Previous-period comparison**: compare a selected inclusive date range with the equally long preceding calendar range, up to 366 days. Show event, high-priority, closed and verified counts with explicit zero-baseline and loaded-data limitations.
-26. **Print-ready reports**: print the scoped report through the browser, with source/date/status metadata and tables that expand beyond their on-screen scroll areas. Navigation, dialogs and interactive controls stay out of the printed report.
-27. **Pipe asset inventory** (`/network`): search pipe IDs, endpoint names/addresses and zones; rank by length, diameter or design flow. Cross-zone pipes match either endpoint. Asset dimensions and source details come from the loaded network graph.
-28. **Structural topology tracing**: select a source or junction and trace upstream, downstream or both through the directed network graph. Cycle-safe traversals show the connected assets and pipes, with a derived map and shareable URL state.
-29. **Display preferences**: choose comfortable or compact panels, higher text contrast, and system/reduced/full interface animation. Changes persist in this browser with a session fallback; 3D playback remains controlled separately.
-30. **Searchable operator guide**: open Help or press `?` outside text fields to search workflows, data-scope explanations and keyboard controls, then navigate directly to the relevant screen. The 3D route retains its own help overlay.
-
-Comparison histories and exports cover loaded data. Report comparisons use incidents' current recorded statuses; the API does not expose historical acknowledgement or closure timestamps. Topology traces describe graph connectivity and do not establish measured propagation or a field isolation plan.
-
----
+- **Flow-behaviour fingerprinting:** focuses on how water moves and interacts, not just isolated sensor values.
+- **Circumferential sensing:** preserves spatial differences around the pipe to help characterize flow patterns.
+- **Network-aware intelligence:** considers relationships between connected nodes instead of treating every sensor independently.
+- **Explainable decision support:** keeps the evidence behind an alert visible to help operators investigate responsibly.
+- **Simulation-ready frontend:** can demonstrate the platform without a backend while retaining the same client interface used for backend integration.
 
 ## The one idea holding it together
 
