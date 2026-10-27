@@ -6,7 +6,8 @@ import type { NetworkGraph } from '../src/types';
 import { filterPipeAssets, inventoryLength, pipeAssets } from '../src/services/networkInventory';
 import { NetworkInventory } from '../src/pages/NetworkInventory';
 const query = vi.hoisted(() => ({ data: undefined as NetworkGraph | undefined, error: null as Error | null }));
-vi.mock('../src/services/ApiProvider', () => ({ useQuery: () => query }));
+vi.mock('../src/services/ApiProvider', () => ({ useQuery: (fetcher: (client: object) => unknown) => ({ ...query, data: fetcher({ getNetwork: () => query.data, getNodes: () => [] }) }) }));
+vi.mock('../src/components/NetworkMap', () => ({ NetworkMap: () => <div>Topology map</div> }));
 const graph: NetworkGraph = {
   vertices: [
     { id: 'SOURCE', kind: 'RESERVOIR', zone_id: 'north', location: { lat: 54, lng: -1, label: 'Hill reservoir', address: 'Hill Road' } },

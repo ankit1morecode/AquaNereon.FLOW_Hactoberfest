@@ -32,6 +32,11 @@ const STATE_COLOR: Record<FlowState, string> = {
   DISTURBANCE: '#ff5f7a',
 };
 
+/** Leaflet interprets string content as HTML; keep API text literal inside our markup. */
+function htmlText(value: string | number): string {
+  return String(value).replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]!);
+}
+
 /**
  * Basemap.
  *
@@ -304,7 +309,7 @@ export function NetworkMap({
         className: 'nm-zone',
         interactive: false,
       }).addTo(map);
-      polygon.bindTooltip(zone.name, {
+      polygon.bindTooltip(htmlText(zone.name), {
         permanent: true,
         direction: 'center',
         className: 'nm-zone-label',
@@ -336,7 +341,7 @@ export function NetworkMap({
       }).addTo(map);
 
       flow.bindTooltip(
-        `${edge.pipe_id}<br>DN${edge.diameter_mm} · ${(edge.length_m / 1000).toFixed(2)} km`,
+        `${htmlText(edge.pipe_id)}<br>DN${htmlText(edge.diameter_mm)} · ${(edge.length_m / 1000).toFixed(2)} km`,
         { className: 'nm-tip', sticky: true },
       );
 
@@ -350,7 +355,7 @@ export function NetworkMap({
       const marker = L.marker([vertex.location.lat, vertex.location.lng], {
         icon: L.divIcon({
           className: 'nm-source-icon',
-          html: `<span class="nm-source-mark"></span><span class="nm-source-name">${vertex.location.label}</span>`,
+          html: `<span class="nm-source-mark"></span><span class="nm-source-name">${htmlText(vertex.location.label)}</span>`,
           iconSize: [14, 14],
           iconAnchor: [7, 7],
         }),
@@ -397,19 +402,19 @@ export function NetworkMap({
           const { byId: summaries, vertexById: vertices } = liveRef.current;
           const summary = summaries.get(vertex.id);
           const v = vertices.get(vertex.id);
-          if (!summary) return `<strong>${vertex.location.label}</strong>`;
+          if (!summary) return `<strong>${htmlText(vertex.location.label)}</strong>`;
           return (
-            `<strong>${v?.location.label ?? vertex.id}</strong>` +
-            `<span class="nm-pop-id">${vertex.id}</span>` +
+            `<strong>${htmlText(v?.location.label ?? vertex.id)}</strong>` +
+            `<span class="nm-pop-id">${htmlText(vertex.id)}</span>` +
             `<span class="nm-pop-row">${STATE_LABEL[summary.state]} · ${summary.flow_lps.toFixed(1)} L/s</span>` +
-            `<span class="nm-pop-row">anomaly ${summary.anomaly_score.toFixed(2)} · ${summary.sampling_mode.toLowerCase()}</span>` +
-            (v?.location.address ? `<span class="nm-pop-addr">${v.location.address}</span>` : '')
+            `<span class="nm-pop-row">anomaly ${summary.anomaly_score.toFixed(2)} · ${htmlText(summary.sampling_mode.toLowerCase())}</span>` +
+            (v?.location.address ? `<span class="nm-pop-addr">${htmlText(v.location.address)}</span>` : '')
           );
         },
         { className: 'nm-popup', closeButton: false },
       );
 
-      dot.bindTooltip(vertex.id.replace('AN-J-', 'J'), {
+      dot.bindTooltip(htmlText(vertex.id.replace('AN-J-', 'J')), {
         permanent: true,
         direction: 'top',
         offset: [0, -9],

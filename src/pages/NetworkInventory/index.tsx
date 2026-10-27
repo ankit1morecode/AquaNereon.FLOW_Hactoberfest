@@ -5,6 +5,7 @@ import { filterPipeAssets, inventoryLength, pipeAssets, pipeSort } from '../../s
 import { Empty, ErrorNote, Loading, Panel } from '../../components/ui';
 import type { NetworkVertex } from '../../types';
 import './network-inventory.css';
+import { TopologyTrace } from './TopologyTrace';
 
 const quantity = (value: number) => Number.isFinite(value) && value >= 0 ? value.toLocaleString(undefined, { maximumFractionDigits: 1 }) : 'Not reported';
 function Endpoint({ id, vertex }: { id: string; vertex: NetworkVertex | undefined }) {
@@ -19,12 +20,15 @@ export function NetworkInventory() {
   const previous = useRef(committed);
   const pending = useRef(new URLSearchParams(params));
   if (previous.current !== committed) { previous.current = committed; pending.current = new URLSearchParams(params); }
-  const update = (key: string, value: string) => {
+  const updateMany = (changes: Record<string, string>) => {
     const next = new URLSearchParams(pending.current);
-    if (value && !(key === 'sort' && value === 'id')) next.set(key, value); else next.delete(key);
+    for (const [key, value] of Object.entries(changes)) {
+      if (value && !(key === 'sort' && value === 'id') && !(key === 'direction' && value === 'downstream')) next.set(key, value); else next.delete(key);
+    }
     pending.current = next;
     setParams(next, { replace: true });
   };
+  const update = (key: string, value: string) => updateMany({ [key]: value });
   const assets = useMemo(() => network.data ? pipeAssets(network.data) : [], [network.data]);
   const filtered = useMemo(() => filterPipeAssets(assets, params), [assets, params]);
   const length = inventoryLength(filtered);
@@ -45,7 +49,7 @@ export function NetworkInventory() {
         <label>Sort pipes<select value={pipeSort(params.get('sort'))} onChange={(event) => update('sort', event.target.value)}>
           <option value="id">Pipe ID</option><option value="length">Longest first</option><option value="diameter">Largest diameter</option><option value="flow">Highest design flow</option>
         </select></label>
-        <button type="button" className="btn" onClick={() => { const next = new URLSearchParams(); pending.current = next; setParams(next); }}>Clear pipe filters</button>
+        <button type="button" className="btn" onClick={() => updateMany({ q: '', zone: '', sort: '' })}>Clear pipe filters</button>
       </div>
       <p className="network-note" role="status">{filtered.length} of {assets.length} loaded pipes · known length {quantity(length.metres)} m across {length.measured} matching pipes.</p>
       <p className="network-note">Zone filters match either endpoint, including pipes that cross zones. Design flow and pressure are asset specifications.</p>
@@ -59,6 +63,7 @@ export function NetworkInventory() {
           </tr>)}</tbody>
         </table></div>}
     </Panel>
+    <TopologyTrace network={graph} params={params} update={updateMany} />
     <Panel title="Other network assets" subtitle="Loaded reservoirs, pumps, valves and demand assets">
       {otherAssets.length ? <ul className="network-assets">{otherAssets.map((vertex) => <li key={vertex.id}>
         <strong>{vertex.id}</strong><span>{vertex.location.label}</span><span>{vertex.kind.toLowerCase()}</span><small>{vertex.location.address ?? 'No address reported'}</small>
