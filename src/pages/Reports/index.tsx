@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '../../services/ApiProvider';
+import { filterReportEvents, reportFilterError, reportStatistics } from '../../services/reportFilters';
+import './reports.css';
 import { EventTimeline } from '../../components/EventTimeline';
 import { BarRow, TimeSeriesChart } from '../../components/charts';
 import {
@@ -14,7 +16,6 @@ import {
   STATE_LABEL,
   clockTime,
 } from '../../components/ui';
-import type { WaterEvent } from '../../types';
 
 /**
  * Reports.
@@ -38,6 +39,8 @@ function downloadJson(name: string, data: unknown): void {
 
 export function Reports() {
   const [window, setWindow] = useState<'session' | 'closed' | 'open'>('session');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
   const events = useQuery((c) => c.getEvents({ limit: 200 }), []);
   const recommendations = useQuery((c) => c.getRecommendations(), []);
@@ -47,30 +50,17 @@ export function Reports() {
 
   const all = events.data?.items ?? [];
 
-  const filtered = useMemo(() => {
-    if (window === 'closed') return all.filter((e) => e.status === 'CLOSED');
-    if (window === 'open') return all.filter((e) => e.status !== 'CLOSED');
-    return all;
-  }, [all, window]);
-
-  const stats = useMemo(() => {
-    const closed = all.filter((e) => e.status === 'CLOSED');
-    const verified = closed.filter((e) => e.verification_id);
-    const intervened = all.filter((e) => e.intervention_id);
-    const byType = new Map<WaterEvent['event_type'], number>();
-    for (const e of all) byType.set(e.event_type, (byType.get(e.event_type) ?? 0) + 1);
-    const byNode = new Map<string, number>();
-    for (const e of all) byNode.set(e.node_id, (byNode.get(e.node_id) ?? 0) + 1);
-    return {
-      total: all.length,
-      closed: closed.length,
-      verified: verified.length,
-      intervened: intervened.length,
-      byType: [...byType.entries()].sort((a, b) => b[1] - a[1]),
-      byNode: [...byNode.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6),
-      verificationRate: closed.length > 0 ? verified.length / closed.length : 0,
-    };
-  }, [all]);
+  const filterError = reportFilterError({ status: window, startDate, endDate });
+  const filtered = useMemo(
+    () => filterReportEvents(all, { status: window, startDate, endDate }),
+    [all, window, startDate, endDate],
+  );
+  const stats = useMemo(() => reportStatistics(filtered), [filtered]);
+  const filteredRecommendations = (recommendations.data ?? []).filter(
+    (recommendation) => recommendation.event_id && filtered.some(
+      (event) => event.event_id === recommendation.event_id,
+    ),
+  );
 
   if (events.error) return <ErrorNote error={events.error} />;
   if (!events.data) return <Loading what="reports" />;
@@ -80,6 +70,18 @@ export function Reports() {
 
   return (
     <div className="page reports-page">
+      <Panel title="Report scope" subtitle="Event dates use your local timezone. Forecast performance below is the latest available backtest.">
+        <div className="rp-filter-controls">
+          <label>From date<input type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} aria-describedby="rp-filter-feedback" /></label>
+          <label>Through date<input type="date" value={endDate} onChange={(event) => setEndDate(event.target.value)} aria-describedby="rp-filter-feedback" /></label>
+          <button type="button" className="btn" onClick={() => { setStartDate(''); setEndDate(''); setWindow('session'); }}>Clear filters</button>
+        </div>
+        {filterError && <p className="rp-filter-error" role="alert">{filterError}</p>}
+        <p className="rp-note" id="rp-filter-feedback" role="status">
+          {filtered.length} matching events from {all.length} loaded of {events.data.total} available (load limit: 200).
+          {events.data.total > all.length && ' This report covers the loaded subset only.'}
+        </p>
+      </Panel>
       <div className="rp-strip">
         <Panel className="kpi">
           <MetricGrid columns={4}>
@@ -105,7 +107,7 @@ export function Reports() {
 
         <Panel title="Events by type" className="rp-bars">
           {stats.byType.length === 0 ? (
-            <Empty>Nothing raised yet this session.</Empty>
+            <Empty>No events match this report scope.</Empty>
           ) : (
             stats.byType.map(([type, n]) => (
               <BarRow
@@ -121,7 +123,7 @@ export function Reports() {
 
         <Panel title="Most active nodes" className="rp-bars">
           {stats.byNode.length === 0 ? (
-            <Empty>Nothing raised yet this session.</Empty>
+            <Empty>No events match this report scope.</Empty>
           ) : (
             stats.byNode.map(([id, n]) => {
               const node = nodes.data?.find((x) => x.node_id === id);
@@ -155,6 +157,7 @@ export function Reports() {
                     type="button"
                     className={window === w ? 'seg-btn active' : 'seg-btn'}
                     onClick={() => setWindow(w)}
+                    aria-pressed={window === w}
                   >
                     {w}
                   </button>
@@ -163,6 +166,7 @@ export function Reports() {
               <button
                 type="button"
                 className="btn"
+                disabled={filtered.length === 0 || !!filterError}
                 onClick={() =>
                   downloadJson(
                     `aquanereon-events-${new Date().toISOString().slice(0, 10)}.json`,
@@ -176,7 +180,7 @@ export function Reports() {
           }
           scroll
         >
-          <EventTimeline events={filtered} chronological limit={40} />
+          <EventTimeline events={filtered} chronological emptyNote="No events match this report scope." />
         </Panel>
 
         <div className="rp-side">
@@ -229,11 +233,11 @@ export function Reports() {
           </Panel>
 
           <Panel title="Interventions" subtitle="Recommended, accepted and verified" scroll>
-            {(recommendations.data ?? []).length === 0 ? (
-              <Empty>No interventions recorded.</Empty>
+            {filteredRecommendations.length === 0 ? (
+              <Empty>No interventions linked to the selected events.</Empty>
             ) : (
               <ul className="rec-list compact">
-                {(recommendations.data ?? []).map((rec) => (
+                {filteredRecommendations.map((rec) => (
                   <li key={rec.recommendation_id}>
                     <div className="rec-head">
                       <span className={`rec-prio p${rec.priority}`}>P{rec.priority}</span>

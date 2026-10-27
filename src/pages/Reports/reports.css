@@ -1,0 +1,26 @@
+.rp-filter-controls {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.rp-filter-controls label {
+  display: grid;
+  gap: 5px;
+  color: var(--text-muted, #a0afbd);
+  font-size: 12px;
+}
+.rp-filter-controls input {
+  color-scheme: dark;
+  padding: 7px 10px;
+  border: 1px solid var(--line, #334350);
+  border-radius: 4px;
+  color: var(--text, #e0e8ee);
+  background: var(--panel, #101921);
+  font: inherit;
+}
+.rp-filter-controls input:focus-visible {
+  outline: 2px solid var(--a, #64d7ed);
+  outline-offset: 2px;
+}
+.rp-filter-error { color: var(--state-disturbance, #ff5f7a); font-size: 12px; }
