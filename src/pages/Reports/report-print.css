@@ -1,0 +1,63 @@
+.rp-print-header { display: none; }
+
+@media print {
+  @page { size: auto; margin: 15mm; }
+  html:has(body.report-print-active), body.report-print-active {
+    height: auto !important; min-height: 0 !important; overflow: visible !important;
+    background: #fff !important; color: #111 !important; color-scheme: light;
+  }
+  /* Local tokens override inherited high-contrast display preferences. */
+  body.report-print-active .reports-page {
+    --bg: #fff; --bg-raised: #fff; --panel: #fff; --panel-solid: #fff;
+    --ink: #111; --ink-dim: #333; --ink-faint: #444;
+    --panel-edge: #bbb; --panel-edge-strong: #888; --a: #005876; --b: #984600;
+    --state-stable: #006a40; --state-drift: #765700; --state-pre: #984600; --state-disturbance: #ac1739;
+    color: #111 !important; background: #fff !important;
+  }
+  body.report-print-active .shell-bar,
+  body.report-print-active .operator-tools,
+  body.report-print-active dialog,
+  body.report-print-active .bare-back,
+  body.report-print-active .rp-filter-controls,
+  body.report-print-active .rp-actions,
+  body.report-print-active .rp-print-action,
+  body.report-print-active .chart-hover { display: none !important; }
+  body.report-print-active #root,
+  body.report-print-active .shell,
+  body.report-print-active .shell-main,
+  body.report-print-active .reports-page,
+  body.report-print-active .rp-strip,
+  body.report-print-active .rp-main,
+  body.report-print-active .rp-side,
+  body.report-print-active .rp-analytics {
+    display: block !important; height: auto !important; min-height: 0 !important;
+    max-height: none !important; overflow: visible !important; padding: 0 !important;
+    scrollbar-gutter: auto !important;
+  }
+  body.report-print-active .rp-print-header { display: block !important; margin: 0 0 16px; break-after: avoid; }
+  body.report-print-active .rp-print-header h1 { font-size: 20px; margin: 0 0 8px; }
+  body.report-print-active .rp-print-header p { font-size: 10px; margin: 5px 0; line-height: 1.5; }
+  body.report-print-active .reports-page .panel {
+    display: block !important; height: auto !important; min-height: 0 !important;
+    max-height: none !important; overflow: visible !important; margin: 0 0 14px !important;
+    background: #fff !important; color: #111 !important; border: 1px solid #bbb !important;
+    box-shadow: none !important; break-inside: avoid;
+  }
+  body.report-print-active .reports-page .panel:has(.event-timeline),
+  body.report-print-active .reports-page .panel:has(table),
+  body.report-print-active .reports-page .panel:has(.rec-list) { break-inside: auto; }
+  body.report-print-active .reports-page .panel-head { break-after: avoid; background: #fff !important; }
+  body.report-print-active .reports-page .panel-body,
+  body.report-print-active .reports-page .panel-body-scroll {
+    height: auto !important; min-height: 0 !important; max-height: none !important;
+    overflow: visible !important; scrollbar-gutter: auto !important;
+  }
+  body.report-print-active .reports-page .event-row { break-inside: avoid; background: #fff !important; opacity: 1 !important; }
+  body.report-print-active .reports-page .rec-list li,
+  body.report-print-active .reports-page tr { break-inside: avoid; }
+  body.report-print-active .reports-page thead { display: table-header-group; }
+  body.report-print-active .reports-page .chart { break-inside: avoid; }
+  body.report-print-active .reports-page a { color: #005876 !important; text-decoration: none; }
+  body.report-print-active .reports-page .rp-note,
+  body.report-print-active .reports-page .metric-label { color: #333 !important; }
+}

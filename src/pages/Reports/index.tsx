@@ -1,10 +1,12 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useApi, useQuery } from '../../services/ApiProvider';
 import { filterReportEvents, reportFilterError, reportStatistics } from '../../services/reportFilters';
 import { buildIncidentHandoff } from '../../services/incidentHandoff';
 import { IncidentAnalytics } from './IncidentAnalytics';
 import { PeriodComparison } from './PeriodComparison';
+import { PrintReportHeader } from './PrintReportHeader';
 import './reports.css';
+import './report-print.css';
 import { EventTimeline } from '../../components/EventTimeline';
 import { BarRow, TimeSeriesChart } from '../../components/charts';
 import {
@@ -49,6 +51,11 @@ export function Reports() {
   const [window, setWindow] = useState<'session' | 'closed' | 'open'>('session');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [printError, setPrintError] = useState<string | null>(null);
+  useEffect(() => {
+    document.body.classList.add('report-print-active');
+    return () => document.body.classList.remove('report-print-active');
+  }, []);
 
   const events = useQuery((c) => c.getEvents({ limit: 200 }), []);
   const recommendations = useQuery((c) => c.getRecommendations(), []);
@@ -79,13 +86,19 @@ export function Reports() {
 
   return (
     <div className="page reports-page">
-      <Panel title="Report scope" subtitle="Event dates use your local timezone. Forecast performance below is the latest available backtest.">
+      <PrintReportHeader source={{ mode: client.mode, label: client.label }} filters={{ status: window, startDate, endDate }} selectedCount={filtered.length} loadedCount={all.length} availableCount={availableCount} />
+      <Panel title="Report scope" subtitle="Event dates use your local timezone. Forecast performance below is the latest available backtest."
+        actions={<button className="btn rp-print-action" type="button" disabled={!!filterError} onClick={() => {
+          try { globalThis.print(); setPrintError(null); }
+          catch { setPrintError('Printing is unavailable in this browser. Use the JSON or incident handoff export.'); }
+        }}>Print report</button>}>
         <div className="rp-filter-controls">
           <label>From date<input type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} aria-describedby="rp-filter-feedback" /></label>
           <label>Through date<input type="date" value={endDate} onChange={(event) => setEndDate(event.target.value)} aria-describedby="rp-filter-feedback" /></label>
           <button type="button" className="btn" onClick={() => { setStartDate(''); setEndDate(''); setWindow('session'); }}>Clear filters</button>
         </div>
         {filterError && <p className="rp-filter-error" role="alert">{filterError}</p>}
+        {printError && <p className="rp-filter-error" role="alert">{printError}</p>}
         <p className="rp-note" id="rp-filter-feedback" role="status">
           {filtered.length} matching events from {all.length} loaded of {events.data.total} available (load limit: 200).
           {events.data.total > all.length && ' This report covers the loaded subset only.'}
@@ -217,8 +230,10 @@ export function Reports() {
 
         <div className="rp-side">
           <Panel title="Forecast performance" subtitle="Backtest error by zone">
-            {(forecasts.data ?? []).length === 0 ? (
+            {forecasts.error ? <ErrorNote error={forecasts.error} /> : !forecasts.data ? (
               <Loading what="forecasts" />
+            ) : forecasts.data.length === 0 ? (
+              <Empty>No forecast performance data is available.</Empty>
             ) : (
               <>
                 {(forecasts.data ?? []).map((f) => {
@@ -265,7 +280,7 @@ export function Reports() {
           </Panel>
 
           <Panel title="Interventions" subtitle="Recommended, accepted and verified" scroll>
-            {filteredRecommendations.length === 0 ? (
+            {recommendations.error ? <ErrorNote error={recommendations.error} /> : !recommendations.data ? <Loading what="interventions" /> : filteredRecommendations.length === 0 ? (
               <Empty>No interventions linked to the selected events.</Empty>
             ) : (
               <ul className="rec-list compact">
