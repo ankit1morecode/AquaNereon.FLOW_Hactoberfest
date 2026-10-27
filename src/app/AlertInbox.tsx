@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useQuery } from '../services/ApiProvider';
 import { useWatchlist } from '../services/watchlist';
 import { alertInboxPreferences, inboxEvents, markInboxRead, type InboxMode } from '../services/alertInbox';
@@ -11,11 +11,24 @@ export function AlertInbox({ store = alertInboxPreferences }: { store?: typeof a
   const watched = useWatchlist();
   const [settings, setSettings] = useState(() => store.read());
   const [open, setOpen] = useState(false);
+  const location = useLocation();
+  const route = `${location.pathname}${location.search}`;
+  const previousRoute = useRef(route);
   const dialog = useRef<HTMLDialogElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
   const preferences = settings.preferences;
   const visible = inboxEvents(events.data?.items ?? [], preferences.mode, watched.ids);
   const unread = visible.filter((event) => !preferences.read.includes(event.event_id)).length;
+  const triggerLabel = !events.data
+    ? events.error ? 'alerts unavailable' : 'loading alerts'
+    : events.error ? `${unread} unread in cached data; refresh failed` : `${unread} unread`;
+
+  useEffect(() => {
+    if (previousRoute.current !== route) {
+      previousRoute.current = route;
+      setOpen(false);
+    }
+  }, [route]);
 
   useEffect(() => {
     const modal = dialog.current;
@@ -26,8 +39,8 @@ export function AlertInbox({ store = alertInboxPreferences }: { store?: typeof a
 
   return <>
     <button ref={trigger} type="button" className="btn inbox-trigger" aria-haspopup="dialog"
-      aria-label={`Alert inbox, ${unread} unread`} onClick={() => setOpen(true)}>
-      Alerts <span className="inbox-count">{unread}</span>
+      aria-label={`Alert inbox, ${triggerLabel}`} title={events.error ? 'Alert refresh failed. Any displayed count comes from cached data.' : undefined} onClick={() => setOpen(true)}>
+      Alerts <span className="inbox-count" aria-hidden="true">{!events.data ? events.error ? '!' : '…' : events.error ? `${unread} stale` : unread}</span>
     </button>
     <dialog ref={dialog} className="inbox-dialog" aria-labelledby="inbox-title"
       onCancel={() => setOpen(false)} onClose={() => setOpen(false)}
@@ -46,10 +59,10 @@ export function AlertInbox({ store = alertInboxPreferences }: { store?: typeof a
           <button type="button" className="btn" disabled={unread === 0} onClick={() =>
             setSettings(store.write(markInboxRead(preferences, visible.map((event) => event.event_id))))}>Mark shown as read</button>
         </div>
-        <p className="inbox-note">{unread} unread of {visible.length} matching open events. Read markers are local to this browser.</p>
+        <p className="inbox-note">{events.data ? `${unread} unread of ${visible.length} matching open events${events.error ? ' in cached data' : ''}. ` : ''}Read markers are local to this browser.</p>
         {events.error && <p className="error-note" role="alert">Could not refresh alerts. {events.error.message}</p>}
         {!events.data && !events.error && <p className="empty">Loading alerts…</p>}
-        {events.data && visible.length === 0 && <p className="empty">No open events match this inbox scope.</p>}
+        {events.data && visible.length === 0 && <p className="empty">{events.error ? 'No matching open events in the cached data.' : 'No open events match this inbox scope.'}</p>}
         {visible.length > 0 && <ul className="inbox-list">{visible.map((event) => <li key={event.event_id}>
           <Link className={preferences.read.includes(event.event_id) ? 'inbox-event read' : 'inbox-event unread'}
             to={`/events?event=${encodeURIComponent(event.event_id)}`} onClick={() => {

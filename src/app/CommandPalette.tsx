@@ -54,6 +54,9 @@ export function CommandPalette() {
     const onKey = (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault();
+        // Keep the active modal's focus and keyboard context intact. The
+        // palette's own open dialog still allows Ctrl+K to toggle it closed.
+        if ([...document.querySelectorAll('dialog[open]')].some((modal) => modal !== dialog.current)) return;
         setOpen((previous) => !previous);
       }
     };

@@ -1,0 +1,6 @@
+.data-feed-status { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; font-size: 10px; color: var(--ink-dim); }
+.data-feed-status .btn { font-size: 10px; padding: 4px 7px; }
+.data-feed-status .feed-ok { color: var(--ink-dim); }
+.data-feed-status .feed-warn { color: var(--state-drift); }
+.data-feed-status .feed-error { color: var(--state-disturbance); }
+.data-feed-status .feed-pending { color: var(--a); }

@@ -1,10 +1,11 @@
 import { useCallback, useEffect } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { useApi, useQuery } from '../services/ApiProvider';
+import { refreshQueries, useApi, useQuery } from '../services/ApiProvider';
 import { PageErrorBoundary } from './PageErrorBoundary';
 import { CommandPalette } from './CommandPalette';
 import { SimulationControls } from './SimulationControls';
 import { AlertInbox } from './AlertInbox';
+import { DataFeedStatus } from './DataFeedStatus';
 import { STATE_CLASS, STATE_LABEL, clockTime } from '../components/ui';
 
 /**
@@ -140,7 +141,12 @@ export function AppShell() {
         </div>
       </header>
 
-      <div className="operator-tools"><SimulationControls /><AlertInbox /><CommandPalette /></div>
+      <div className="operator-tools">
+        <SimulationControls />
+        <DataFeedStatus mode={client.mode} updatedAt={overview.updatedAt} error={overview.error}
+          refreshing={overview.refreshing} onRefresh={refreshQueries} />
+        <AlertInbox /><CommandPalette />
+      </div>
 
       <main className="shell-main">
         {/* Keyed on the route, so a page that throws is not a trap: navigating

@@ -103,6 +103,11 @@ export class PlatformSimulator {
   /** Simulated seconds since start, and the wall clock they map to. */
   time = 0;
   private readonly epochMs = Date.now();
+  // Persisted notes, bookmarks and read markers must never bind a new demo
+  // incident to the same ID from a previous simulation session.
+  private readonly eventSession = globalThis.crypto?.randomUUID?.()
+    ?? `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+  private eventSequence = 0;
 
   /** Consumption history per zone, one point per simulated hour. */
   private readonly consumption = new Map<string, TimePoint[]>();
@@ -363,7 +368,7 @@ export class PlatformSimulator {
     const region = suspectRegion(this.network, sim.node.node_id);
 
     return {
-      event_id: `EV-${sim.node.node_id}-${Math.round(this.time)}`,
+      event_id: `EV-${sim.node.node_id}-${this.eventSession}-${++this.eventSequence}`,
       event_type: assessment.eventType,
       node_id: sim.node.node_id,
       zone_id: sim.node.zone_id,

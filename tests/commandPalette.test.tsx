@@ -45,4 +45,19 @@ describe('quick navigation', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Close quick navigation' }));
     expect(document.activeElement).toBe(screen.getByRole('button', { name: /Search/ }));
   });
+  it('does not stack the palette over another dialog and still toggles its own modal', () => {
+    render(<MemoryRouter><dialog open aria-label="Another modal"><button>Modal action</button></dialog><CommandPalette /></MemoryRouter>);
+    const other = screen.getByRole('dialog', { name: 'Another modal' }) as HTMLDialogElement;
+    const button = screen.getByRole('button', { name: 'Modal action' });
+    button.focus();
+    fireEvent.keyDown(window, { key: 'k', ctrlKey: true });
+    expect(document.querySelector<HTMLDialogElement>('.command-dialog')?.open).toBe(false);
+    expect(other.open).toBe(true);
+    expect(document.activeElement).toBe(button);
+    other.close();
+    fireEvent.keyDown(window, { key: 'k', ctrlKey: true });
+    expect(document.querySelector<HTMLDialogElement>('.command-dialog')?.open).toBe(true);
+    fireEvent.keyDown(window, { key: 'k', ctrlKey: true });
+    expect(document.querySelector<HTMLDialogElement>('.command-dialog')?.open).toBe(false);
+  });
 });

@@ -1,19 +1,20 @@
 /** @vitest-environment jsdom */
-import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { MemoryRouter, useLocation } from 'react-router-dom';
+import { Link, MemoryRouter, useLocation } from 'react-router-dom';
 import { AlertInbox } from '../src/app/AlertInbox';
 import { ALERT_INBOX_KEY, createInboxPreferences, inboxEvents, markInboxRead } from '../src/services/alertInbox';
 import type { WaterEvent } from '../src/types';
 
-const fixture = vi.hoisted(() => ({ events: [] as WaterEvent[] }));
-vi.mock('../src/services/ApiProvider', () => ({ useQuery: () => ({ data: { items: fixture.events, total: 350 } }) }));
+const fixture = vi.hoisted(() => ({ events: [] as WaterEvent[], available: true, error: null as Error | null }));
+vi.mock('../src/services/ApiProvider', () => ({ useQuery: () => ({ data: fixture.available ? { items: fixture.events, total: 350 } : undefined, error: fixture.error }) }));
 vi.mock('../src/services/watchlist', () => ({ useWatchlist: () => ({ ids: ['watched'] }) }));
 beforeAll(() => {
   HTMLDialogElement.prototype.showModal = function () { this.setAttribute('open', ''); };
   HTMLDialogElement.prototype.close = function () { this.removeAttribute('open'); };
 });
 afterEach(cleanup);
+beforeEach(() => { fixture.events = []; fixture.available = true; fixture.error = null; });
 function event(id: string, severity: WaterEvent['severity'], node = 'other', status: WaterEvent['status'] = 'OPEN'): WaterEvent {
   return { event_id: id, node_id: node, severity, status, timestamp: '2026-10-27T10:00:00Z', event_type: 'FLOW_ANOMALY' } as WaterEvent;
 }
@@ -56,6 +57,39 @@ describe('operator alert inbox', () => {
     expect(screen.getByText(/1 loaded of 350 available/)).toBeTruthy();
     fireEvent.click(screen.getByRole('link', { name: /other/ }));
     expect(screen.getByTestId('inbox-location').textContent).toBe('/events?event=EV-1');
+    expect(document.querySelector('dialog')?.open).toBe(false);
+  });
+  it('distinguishes loading, unavailable and cached counts instead of claiming zero unread', () => {
+    fixture.available = false;
+    const memoryStorage = memory();
+    const store = createInboxPreferences(() => memoryStorage);
+    const page = () => <MemoryRouter><AlertInbox store={store} /></MemoryRouter>;
+    const view = render(page());
+    fireEvent.click(screen.getByRole('button', { name: 'Alert inbox, loading alerts' }));
+    expect(screen.getByText('Loading alerts…')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Alert inbox, 0 unread' })).toBeNull();
+    fixture.error = new Error('Events endpoint unavailable');
+    view.rerender(page());
+    expect(screen.getByRole('button', { name: 'Alert inbox, alerts unavailable' })).toBeTruthy();
+    expect(screen.getByRole('alert').textContent).toContain('Events endpoint unavailable');
+    expect((screen.getByRole('button', { name: 'Mark shown as read' }) as HTMLButtonElement).disabled).toBe(true);
+    fixture.available = true; fixture.events = [event('EV-1', 'HIGH')];
+    view.rerender(page());
+    expect(screen.getByRole('button', { name: 'Alert inbox, 1 unread in cached data; refresh failed' })).toBeTruthy();
+    expect(screen.getByText('1 stale')).toBeTruthy();
+    expect(screen.getByText(/1 unread of 1 matching open events in cached data/)).toBeTruthy();
+    fixture.error = null;
+    view.rerender(page());
+    expect(screen.getByRole('button', { name: 'Alert inbox, 1 unread' })).toBeTruthy();
+    expect(screen.queryByText('1 stale')).toBeNull();
+  });
+  it('closes an open inbox when the route changes outside its event links', () => {
+    const memoryStorage = memory();
+    const store = createInboxPreferences(() => memoryStorage);
+    render(<MemoryRouter><AlertInbox store={store} /><Link to="/reports">Navigate to reports</Link></MemoryRouter>);
+    fireEvent.click(screen.getByRole('button', { name: 'Alert inbox, 0 unread' }));
+    expect(document.querySelector('dialog')?.open).toBe(true);
+    fireEvent.click(screen.getByRole('link', { name: 'Navigate to reports' }));
     expect(document.querySelector('dialog')?.open).toBe(false);
   });
 });

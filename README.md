@@ -25,7 +25,7 @@ VITE_API_BASE_URL=https://backend/api/v1 npm run dev
 
 Copy `.env.example` to `.env.local` for basemap keys and the backend URL.
 
-## Ten new operator features
+## First feature batch
 
 This repository includes the current project and ten independently committed features:
 
@@ -43,6 +43,23 @@ This repository includes the current project and ten independently committed fea
 Event tools operate on the loaded subset (up to 200 events on Events and Reports). Report scope and exported handoffs disclose the loaded and available counts. Browser-saved watchlists and views are local preferences. The platform still uses the existing API contracts for live backend data.
 
 The copied project excludes private environment files, dependencies and build output. Run `npm ci` after cloning, then `npm run dev`.
+
+## Second feature batch
+
+The next ten features each have their own commit:
+
+11. **Telemetry windows and capture**: Node Diagnostics can show all loaded samples or the latest 15/60 seconds. Freeze captures the raw traces and their water-property metrics; the live signature, assessment and 3D view continue updating. Changing nodes clears the capture.
+12. **Telemetry CSV**: export the displayed live or frozen samples, with source mode, capture scope, UTC and original timestamps, branch flow/pressure, water properties, all sensor channels and data-quality flags.
+13. **Device health details**: reported sensor, power, communication and calibration health, telemetry age, packet loss, battery/RSSI when provided, report freshness and signature quality. Missing optional measurements remain unavailable.
+14. **Zone overview** (`/zones`): search and rank zones by demand, shortage risk, inferred loss or supply margin; open their detail, nodes or events.
+15. **Demand scenario planner**: adjust local supply and demand percentages against the current zone baseline. Balance and coverage use supply × (1 − inferred loss fraction), with the loss fraction held fixed. Reset restores the baseline inputs.
+16. **Forecast CSV**: download the selected zone's loaded prediction, optional interval bounds and history, with source/model/horizon metadata and original plus UTC timestamps.
+17. **Local incident notebook**: add, edit and delete notes scoped to an incident and node. Each incident supports up to 50 notes of 2,000 characters. Browser storage has a session fallback.
+18. **Event bookmarks**: save incidents locally and show bookmarked loaded events through a URL-backed filter. Existing search, sorting and CSV export apply to that subset.
+19. **Alert inbox**: review open high-priority incidents or incidents on watched nodes, switch to all open events, mark shown alerts as read, and open the incident directly. Read markers and inbox scope persist in this browser.
+20. **Feed freshness and recovery**: see API refresh age, browser connection failures and cached-data status. Refresh all mounted queries manually; reconnect triggers a refresh. Queries clear the previous asset when the route changes and ignore late replies.
+
+The notebook, bookmarks and inbox read markers are browser-local operator aids. Notes are separate from backend event records. Telemetry and forecast exports describe only the samples or horizons returned by the API. The scenario planner performs local arithmetic and sends no network commands.
 
 ---
 
