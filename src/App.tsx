@@ -4,6 +4,7 @@ import { ApiProvider } from './services/ApiProvider';
 import { AppShell } from './app/AppShell';
 import { CityCommand } from './pages/CityCommand';
 import { ZoneIntelligence } from './pages/ZoneIntelligence';
+import { ZoneOverview } from './pages/ZoneOverview';
 import { NodeDiagnostics } from './pages/NodeDiagnostics';
 import { NodeDirectory } from './pages/NodeDirectory';
 import { NodeComparison } from './pages/NodeComparison';
@@ -35,7 +36,7 @@ export function App() {
         <Routes>
           <Route element={<AppShell />}>
             <Route path="/" element={<CityCommand />} />
-            <Route path="/zones" element={<Navigate to="/zones/Z-CENTRAL" replace />} />
+            <Route path="/zones" element={<ZoneOverview />} />
             <Route path="/zones/:zoneId" element={<ZoneIntelligence />} />
             <Route path="/nodes" element={<NodeDirectory />} />
             <Route path="/compare" element={<NodeComparison />} />

@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '../../services/ApiProvider';
 import { NetworkMap } from '../../components/NetworkMap';
 import { NodeStatus } from '../../components/NodeStatus';
@@ -41,7 +41,8 @@ export function ZoneIntelligence() {
   if (zones.error) return <ErrorNote error={zones.error} />;
   if (!zones.data || !nodes.data || !network.data) return <Loading what="zone" />;
 
-  const active = zones.data.find((z) => z.zone_id === zoneId) ?? zones.data[0];
+  const active = zones.data.find((z) => z.zone_id === zoneId);
+  if (!active) return <div className="page"><Panel title="Zone unavailable"><p>The requested zone is not in the loaded network.</p><Link to="/zones">View all zones</Link></Panel></div>;
   const zoneNodes = nodes.data.filter((n) => n.zone_id === active.zone_id);
 
   const consumption = active.consumption_series;
@@ -50,6 +51,7 @@ export function ZoneIntelligence() {
   return (
     <div className="page zone-intel">
       <div className="zone-tabs">
+        <Link className="tab" to="/zones">All zones</Link>
         {zones.data.map((z) => (
           <button
             key={z.zone_id}

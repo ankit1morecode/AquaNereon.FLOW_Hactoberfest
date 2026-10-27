@@ -1,0 +1,11 @@
+.zone-overview-tools { display: flex; align-items: end; flex-wrap: wrap; gap: 12px; }
+.zone-overview-tools label { display: grid; gap: 5px; font-size: 12px; color: var(--ink-dim); }
+.zone-overview-tools input, .zone-overview-tools select { padding: 8px 10px; border: 1px solid var(--panel-edge); border-radius: var(--r-sm); background: var(--bg); color: var(--ink); font: inherit; }
+.zone-overview-table-wrap { width: 100%; overflow-x: auto; }
+.zone-overview-table { width: 100%; min-width: 950px; border-collapse: collapse; text-align: left; font: 12px var(--mono); }
+.zone-overview-table th, .zone-overview-table td { padding: 13px 10px; border-bottom: 1px solid var(--panel-edge); vertical-align: middle; }
+.zone-overview-table thead th { color: var(--ink-dim); font-weight: 400; }
+.zone-overview-table small { display: block; margin-top: 5px; color: var(--ink-dim); font-weight: 400; }
+.zone-overview-links { display: grid; gap: 7px; white-space: nowrap; }
+.zone-margin-deficit { color: var(--state-disturbance); }
+.zone-overview-note { color: var(--ink-dim); font-size: 11px; line-height: 1.6; }
