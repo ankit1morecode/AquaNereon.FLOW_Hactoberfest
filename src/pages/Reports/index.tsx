@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
-import { useQuery } from '../../services/ApiProvider';
+import { useApi, useQuery } from '../../services/ApiProvider';
 import { filterReportEvents, reportFilterError, reportStatistics } from '../../services/reportFilters';
+import { buildIncidentHandoff } from '../../services/incidentHandoff';
 import './reports.css';
 import { EventTimeline } from '../../components/EventTimeline';
 import { BarRow, TimeSeriesChart } from '../../components/charts';
@@ -27,8 +28,8 @@ import {
  * matters most even though it is the least dramatic.
  */
 
-function downloadJson(name: string, data: unknown): void {
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+function downloadFile(name: string, content: string, type: string): void {
+  const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -37,7 +38,12 @@ function downloadJson(name: string, data: unknown): void {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
+function downloadJson(name: string, data: unknown): void {
+  downloadFile(name, JSON.stringify(data, null, 2), 'application/json');
+}
+
 export function Reports() {
+  const client = useApi();
   const [window, setWindow] = useState<'session' | 'closed' | 'open'>('session');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -64,6 +70,7 @@ export function Reports() {
 
   if (events.error) return <ErrorNote error={events.error} />;
   if (!events.data) return <Loading what="reports" />;
+  const availableCount = events.data.total;
 
   const maxType = Math.max(1, ...stats.byType.map(([, n]) => n));
   const maxNode = Math.max(1, ...stats.byNode.map(([, n]) => n));
@@ -175,6 +182,26 @@ export function Reports() {
                 }
               >
                 Export JSON
+              </button>
+              <button
+                type="button"
+                className="btn"
+                disabled={filtered.length === 0 || !!filterError || !recommendations.data || !!recommendations.error}
+                title={recommendations.error ? 'Recommendations could not be loaded; retry before exporting a complete handoff.' : 'Download selected incidents, evidence, recommendations and verification references as Markdown'}
+                onClick={() => downloadFile(
+                  `aquanereon-handoff-${new Date().toISOString().slice(0, 10)}.md`,
+                  buildIncidentHandoff({
+                    events: filtered,
+                    recommendations: recommendations.data ?? [],
+                    source: { mode: client.mode, label: client.label },
+                    filters: { status: window, startDate, endDate },
+                    loadedCount: all.length,
+                    availableCount,
+                  }),
+                  'text/markdown;charset=utf-8',
+                )}
+              >
+                Export incident handoff
               </button>
             </div>
           }
