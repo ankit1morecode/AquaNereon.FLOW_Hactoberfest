@@ -4,6 +4,7 @@ import { useApi, useQuery } from '../services/ApiProvider';
 import { PageErrorBoundary } from './PageErrorBoundary';
 import { CommandPalette } from './CommandPalette';
 import { SimulationControls } from './SimulationControls';
+import { AlertInbox } from './AlertInbox';
 import { STATE_CLASS, STATE_LABEL, clockTime } from '../components/ui';
 
 /**
@@ -139,7 +140,7 @@ export function AppShell() {
         </div>
       </header>
 
-      <div className="operator-tools"><SimulationControls /><CommandPalette /></div>
+      <div className="operator-tools"><SimulationControls /><AlertInbox /><CommandPalette /></div>
 
       <main className="shell-main">
         {/* Keyed on the route, so a page that throws is not a trap: navigating
