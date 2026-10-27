@@ -9,6 +9,8 @@
 .node-table th, .node-table td { padding: 12px 10px; border-bottom: 1px solid var(--line, #2c3746); white-space: nowrap; }
 .node-table th { color: var(--ink-dim); font-weight: 500; }
 .node-table td small { display: block; color: var(--ink-dim); margin-top: 5px; }
+.node-table th small { display: block; margin-top: 5px; font-weight: 400; }
+.node-comparison-table caption { text-align: left; }
 .node-table a { color: var(--a); }
 .node-table tbody tr:hover { background: #ffffff04; }
 .node-tools .node-check { display: flex; align-items: center; gap: 7px; min-height: 34px; }

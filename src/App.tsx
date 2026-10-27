@@ -6,6 +6,7 @@ import { CityCommand } from './pages/CityCommand';
 import { ZoneIntelligence } from './pages/ZoneIntelligence';
 import { NodeDiagnostics } from './pages/NodeDiagnostics';
 import { NodeDirectory } from './pages/NodeDirectory';
+import { NodeComparison } from './pages/NodeComparison';
 import { Events } from './pages/Events';
 import { Reports } from './pages/Reports';
 
@@ -37,6 +38,7 @@ export function App() {
             <Route path="/zones" element={<Navigate to="/zones/Z-CENTRAL" replace />} />
             <Route path="/zones/:zoneId" element={<ZoneIntelligence />} />
             <Route path="/nodes" element={<NodeDirectory />} />
+            <Route path="/compare" element={<NodeComparison />} />
             <Route path="/nodes/:nodeId" element={<NodeDiagnostics />} />
             <Route path="/events" element={<Events />} />
             <Route path="/reports" element={<Reports />} />
