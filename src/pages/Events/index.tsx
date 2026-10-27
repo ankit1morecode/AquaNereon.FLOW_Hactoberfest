@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useApi, useQuery, usePlatform } from '../../services/ApiProvider';
 import { EventTimeline } from '../../components/EventTimeline';
@@ -11,6 +11,7 @@ import './events.css';
 import { SavedEventViews } from './SavedEventViews';
 import { EventCsvExport } from './EventCsvExport';
 import { IncidentNotebook } from './IncidentNotebook';
+import { useEventBookmarks } from '../../services/eventBookmarks';
 
 /**
  * Event Center.
@@ -30,6 +31,9 @@ export function Events() {
   const navigate = useNavigate();
   const platform = usePlatform();
   const client = useApi();
+  const bookmarks = useEventBookmarks();
+  const [bookmarkError, setBookmarkError] = useState<string | null>(null);
+  const bookmarksOnly = params.get('bookmarks') === '1';
 
   const filters = useMemo(() => readEventFilters(params), [params]);
   const updateFilters = (changes: Partial<EventFilters>) => {
@@ -45,12 +49,13 @@ export function Events() {
 
   const selectedId = params.get('event');
 
-  const filtered = useMemo(() => filterEvents(events.data?.items ?? [], filters), [events.data, filters]);
+  const filtered = useMemo(() => filterEvents(events.data?.items ?? [], filters).filter((event) => !bookmarksOnly || bookmarks.ids.includes(event.event_id)), [events.data, filters, bookmarksOnly, bookmarks.ids]);
+  const loadedBookmarkCount = (events.data?.items ?? []).filter((event) => bookmarks.ids.includes(event.event_id)).length;
 
   const selected =
     filtered.find((e) => e.event_id === selectedId) ?? filtered[0] ?? null;
   const zones = network.data?.zones ?? [...new Set((events.data?.items ?? []).map((event) => event.zone_id))].map((zone_id) => ({ zone_id, name: zone_id }));
-  const hasFilters = Boolean(filters.q || filters.severity || filters.status || filters.zone);
+  const hasFilters = Boolean(filters.q || filters.severity || filters.status || filters.zone || bookmarksOnly);
 
   const setStatusFor = async (event: WaterEvent, next: WaterEvent['status']) => {
     // The simulator owns event state; a real backend would take a PATCH. Both
@@ -109,8 +114,18 @@ export function Events() {
               <select aria-label="Sort events" value={filters.sort} onChange={(e) => updateFilters({ sort: e.target.value as EventSort })}>
                 <option value="priority">priority first</option><option value="newest">newest first</option><option value="oldest">oldest first</option><option value="anomaly">highest anomaly</option>
               </select>
-              <button className="btn" type="button" disabled={!hasFilters && filters.sort === 'priority'} onClick={() => updateFilters({ q: '', severity: '', status: '', zone: '', sort: 'priority' })}>Clear filters</button>
+              <label className="event-bookmark-filter"><input type="checkbox" aria-label="Bookmarked events only" checked={bookmarksOnly} onChange={(event) => {
+                const next = new URLSearchParams(pendingParams.current);
+                if (event.target.checked) next.set('bookmarks', '1'); else next.delete('bookmarks');
+                next.delete('event'); pendingParams.current = next; setParams(next, { replace: true });
+              }} />Bookmarked only ({loadedBookmarkCount} loaded)</label>
+              <button className="btn" type="button" disabled={!hasFilters && filters.sort === 'priority'} onClick={() => {
+                const next = writeEventFilters(pendingParams.current, { q: '', severity: '', status: '', zone: '', sort: 'priority' });
+                next.delete('bookmarks'); pendingParams.current = next; setParams(next, { replace: true });
+              }}>Clear filters</button>
               <EventCsvExport events={filtered} />
+              {bookmarks.warning && <p className="event-tools-summary" role="status">{bookmarks.warning}</p>}
+              {bookmarkError && <p className="event-tools-summary" role="alert">{bookmarkError}</p>}
               {events.data.total > events.data.items.length && <p className="event-tools-summary">Showing the latest {events.data.items.length} of {events.data.total} events. Search and export apply to loaded events.</p>}
             </div>
           <SavedEventViews filters={filters} onApply={updateFilters} />
@@ -153,7 +168,11 @@ export function Events() {
         )}
 
         {selected ? (
-          <Panel title="Why this event exists" subtitle="Evidence chain, model outputs and context">
+          <Panel title="Why this event exists" subtitle="Evidence chain, model outputs and context" actions={
+            <button type="button" className="btn" aria-label={`${bookmarks.ids.includes(selected.event_id) ? 'Remove bookmark for' : 'Bookmark'} ${selected.event_id}`} aria-pressed={bookmarks.ids.includes(selected.event_id)} title="Bookmarks are saved in this browser" onClick={() => setBookmarkError(bookmarks.toggle(selected.event_id))}>
+              {bookmarks.ids.includes(selected.event_id) ? '★ Bookmarked' : '☆ Bookmark event'}
+            </button>
+          }>
             <EvidencePanel
               event={selected}
               onStatusChange={(next) => void setStatusFor(selected, next)}
