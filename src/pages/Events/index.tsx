@@ -1,11 +1,13 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useApi, useQuery, usePlatform } from '../../services/ApiProvider';
 import { EventTimeline } from '../../components/EventTimeline';
 import { EvidencePanel } from '../../components/EvidencePanel';
 import { NetworkMap } from '../../components/NetworkMap';
 import { Empty, ErrorNote, Loading, Panel } from '../../components/ui';
-import type { Severity, WaterEvent } from '../../types';
+import type { WaterEvent } from '../../types';
+import { EVENT_SEVERITIES, EVENT_STATUSES, filterEvents, readEventFilters, writeEventFilters, type EventFilters, type EventSort } from '../../services/eventFilters';
+import './events.css';
 
 /**
  * Event Center.
@@ -16,40 +18,28 @@ import type { Severity, WaterEvent } from '../../types';
  * about it.
  */
 
-const SEVERITIES: Severity[] = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'INFO'];
-const STATUSES: WaterEvent['status'][] = [
-  'OPEN',
-  'ACKNOWLEDGED',
-  'INTERVENING',
-  'VERIFYING',
-  'CLOSED',
-];
-
 export function Events() {
   const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
   const platform = usePlatform();
   const client = useApi();
 
-  const [severity, setSeverity] = useState<Severity | null>(null);
-  const [status, setStatus] = useState<WaterEvent['status'] | null>(null);
+  const filters = useMemo(() => readEventFilters(params), [params]);
+  const updateFilters = (changes: Partial<EventFilters>) => setParams(writeEventFilters(params, changes), { replace: true });
 
-  const events = useQuery((c) => c.getEvents({ limit: 80 }), []);
+  const events = useQuery((c) => c.getEvents({ limit: 200 }), []);
   const recommendations = useQuery((c) => c.getRecommendations(), []);
   const network = useQuery((c) => c.getNetwork(), []);
   const nodes = useQuery((c) => c.getNodes(), []);
 
   const selectedId = params.get('event');
 
-  const filtered = useMemo(() => {
-    let items = events.data?.items ?? [];
-    if (severity) items = items.filter((e) => e.severity === severity);
-    if (status) items = items.filter((e) => e.status === status);
-    return items;
-  }, [events.data, severity, status]);
+  const filtered = useMemo(() => filterEvents(events.data?.items ?? [], filters), [events.data, filters]);
 
   const selected =
-    (events.data?.items ?? []).find((e) => e.event_id === selectedId) ?? filtered[0] ?? null;
+    filtered.find((e) => e.event_id === selectedId) ?? filtered[0] ?? null;
+  const zones = network.data?.zones ?? [...new Set((events.data?.items ?? []).map((event) => event.zone_id))].map((zone_id) => ({ zone_id, name: zone_id }));
+  const hasFilters = Boolean(filters.q || filters.severity || filters.status || filters.zone);
 
   const setStatusFor = async (event: WaterEvent, next: WaterEvent['status']) => {
     // The simulator owns event state; a real backend would take a PATCH. Both
@@ -71,45 +61,53 @@ export function Events() {
       <div className="ep-list">
         <Panel
           title="Events"
-          subtitle={`${openCount} open of ${events.data.total}`}
-          actions={
-            <div className="ep-filters">
+          subtitle={`${openCount} open · ${filtered.length} matching of ${events.data.items.length} loaded`}
+          scroll
+        >
+            <div className="event-tools" role="search" aria-label="Search and filter events">
+              <input className="event-search" type="search" aria-label="Search events" placeholder="Search event, node, type or evidence…" maxLength={200} value={filters.q} onChange={(e) => updateFilters({ q: e.target.value })} />
               <select
-                value={severity ?? ''}
-                onChange={(e) => setSeverity((e.target.value || null) as Severity | null)}
+                value={filters.severity}
+                onChange={(e) => updateFilters({ severity: e.target.value as EventFilters['severity'] })}
                 aria-label="Filter by severity"
               >
                 <option value="">all severities</option>
-                {SEVERITIES.map((s) => (
+                {EVENT_SEVERITIES.map((s) => (
                   <option key={s} value={s}>
                     {s.toLowerCase()}
                   </option>
                 ))}
               </select>
               <select
-                value={status ?? ''}
-                onChange={(e) =>
-                  setStatus((e.target.value || null) as WaterEvent['status'] | null)
-                }
+                value={filters.status}
+                onChange={(e) => updateFilters({ status: e.target.value as EventFilters['status'] })}
                 aria-label="Filter by status"
               >
                 <option value="">all statuses</option>
-                {STATUSES.map((s) => (
+                {EVENT_STATUSES.map((s) => (
                   <option key={s} value={s}>
                     {s.toLowerCase()}
                   </option>
                 ))}
               </select>
+              <select aria-label="Filter events by zone" value={filters.zone} onChange={(e) => updateFilters({ zone: e.target.value })}>
+                <option value="">all zones</option>
+                {filters.zone && !zones.some((zone) => zone.zone_id === filters.zone) && <option value={filters.zone}>{filters.zone}</option>}
+                {zones.map((zone) => <option key={zone.zone_id} value={zone.zone_id}>{zone.name}</option>)}
+              </select>
+              <select aria-label="Sort events" value={filters.sort} onChange={(e) => updateFilters({ sort: e.target.value as EventSort })}>
+                <option value="priority">priority first</option><option value="newest">newest first</option><option value="oldest">oldest first</option><option value="anomaly">highest anomaly</option>
+              </select>
+              <button className="btn" type="button" disabled={!hasFilters && filters.sort === 'priority'} onClick={() => updateFilters({ q: '', severity: '', status: '', zone: '', sort: 'priority' })}>Clear filters</button>
+              {events.data.total > events.data.items.length && <p className="event-tools-summary">Showing the latest {events.data.items.length} of {events.data.total} events. Search and export apply to loaded events.</p>}
             </div>
-          }
-          scroll
-        >
           <EventTimeline
             events={filtered}
+            preserveOrder
             selected={selected?.event_id ?? null}
-            onSelect={(id) => setParams({ event: id })}
+            onSelect={(id) => { const next = new URLSearchParams(params); next.set('event', id); setParams(next); }}
             emptyNote={
-              severity || status
+              hasFilters
                 ? 'No events match this filter.'
                 : 'No events. Every node is reading within its baseline.'
             }

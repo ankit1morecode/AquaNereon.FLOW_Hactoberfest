@@ -29,6 +29,8 @@ export interface EventTimelineProps {
   onSelect?: (eventId: EventId) => void;
   /** Sort newest-first instead of by severity. */
   chronological?: boolean;
+  /** Respect a caller's explicit ordering (for filtered event query results). */
+  preserveOrder?: boolean;
   limit?: number;
   emptyNote?: string;
 }
@@ -38,10 +40,11 @@ export function EventTimeline({
   selected = null,
   onSelect,
   chronological = false,
+  preserveOrder = false,
   limit,
   emptyNote = 'No events. Every node is reading within its baseline.',
 }: EventTimelineProps) {
-  const sorted = [...events].sort((a, b) => {
+  const sorted = preserveOrder ? events : [...events].sort((a, b) => {
     if (!chronological) {
       const open = Number(b.status !== 'CLOSED') - Number(a.status !== 'CLOSED');
       if (open !== 0) return open;
