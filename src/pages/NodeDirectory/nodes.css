@@ -11,6 +11,9 @@
 .node-table td small { display: block; color: var(--ink-dim); margin-top: 5px; }
 .node-table a { color: var(--a); }
 .node-table tbody tr:hover { background: #ffffff04; }
+.node-tools .node-check { display: flex; align-items: center; gap: 7px; min-height: 34px; }
+.node-tools .node-check input { min-width: 0; min-height: 0; width: 16px; height: 16px; }
+.node-star[aria-pressed="true"] { color: var(--state-drift); }
 .node-tools input:focus-visible, .node-tools select:focus-visible { outline: 2px solid var(--a); outline-offset: 2px; }
 @media (max-width: 640px) { .node-tools label, .node-tools input[type="search"] { width: 100%; min-width: 0; } }
 
