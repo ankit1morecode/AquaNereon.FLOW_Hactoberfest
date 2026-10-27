@@ -7,7 +7,10 @@ import { EventTimeline } from '../../components/EventTimeline';
 import { AssessmentPanel } from '../../components/AssessmentPanel';
 import { JunctionPreview } from '../../components/JunctionPreview';
 import { TimeSeriesChart } from '../../components/charts';
+import { TelemetryWindowControls } from '../../components/TelemetryWindowControls';
+import { useTelemetryWindow } from '../../services/telemetryWindow';
 import {
+  Empty,
   ErrorNote,
   HealthDot,
   Loading,
@@ -53,6 +56,7 @@ export function NodeDiagnostics() {
   const telemetry = useQuery((c) => c.getNodeTelemetry(nodeId, { limit: 120 }), [nodeId]);
   const health = useQuery((c) => c.getNodeHealth(nodeId), [nodeId]);
   const events = useQuery((c) => c.getEvents({ node_id: nodeId, limit: 12 }), [nodeId]);
+  const traceWindow = useTelemetryWindow(nodeId, telemetry.data ?? []);
 
   const [log, setLog] = useState<CommandAck[]>([]);
   const [pending, setPending] = useState<string | null>(null);
@@ -103,10 +107,12 @@ export function NodeDiagnostics() {
   );
 
   if (nodes.error) return <ErrorNote error={nodes.error} />;
-  if (!node || !signature.data) return <Loading what="node" />;
+  if (signature.error) return <ErrorNote error={signature.error} />;
+  if (!node || !signature.data || signature.data.node_id !== nodeId) return <Loading what="node" />;
 
   const sig = signature.data;
-  const frames = telemetry.data ?? [];
+  const frames = traceWindow.frames;
+  const latestFrame = frames[frames.length - 1];
   const t0 = frames.length ? new Date(frames[0].timestamp).getTime() : Date.now();
   const xOf = (iso: string) => (new Date(iso).getTime() - t0) / 1000;
 
@@ -179,7 +185,7 @@ export function NodeDiagnostics() {
           subtitle={`Against baseline ${sig.baseline_id}`}
           className="nd-signature"
         >
-          <FlowSignatureChart signatures={history.data ?? []} height={190} />
+          <FlowSignatureChart signatures={(history.data ?? []).filter((item) => item.node_id === nodeId)} height={190} />
           <MetricGrid columns={4}>
             <Metric
               label="Baseline distance"
@@ -262,6 +268,10 @@ export function NodeDiagnostics() {
       </div>
 
       {/* --- 4. raw traces --- */}
+      <Panel title="Telemetry workspace" subtitle="Freeze and time windows apply to the raw traces below. Live assessments above continue updating.">
+        <TelemetryWindowControls window={traceWindow} />
+        {telemetry.error && <ErrorNote error={telemetry.error} />}
+      </Panel>
       <div className="nd-row nd-traces">
         <Panel title="Flow and pressure" subtitle="Both branches and the outlet">
           {frames.length > 1 ? (
@@ -323,7 +333,7 @@ export function NodeDiagnostics() {
               />
             </>
           ) : (
-            <Loading what="telemetry" />
+            telemetry.loading ? <Loading what="telemetry" /> : <Empty>{frames.length ? 'At least two samples are needed to draw a trace.' : 'No telemetry samples are loaded for this node.'}</Empty>
           )}
         </Panel>
 
@@ -350,22 +360,22 @@ export function NodeDiagnostics() {
               ariaLabel="Acoustic and turbidity"
             />
           ) : (
-            <Loading what="telemetry" />
+            telemetry.loading ? <Loading what="telemetry" /> : <Empty>{frames.length ? 'At least two samples are needed to draw a trace.' : 'No telemetry samples are loaded for this node.'}</Empty>
           )}
           <MetricGrid columns={3}>
             <Metric
               label="Conductivity"
-              value={sig.water_properties.conductivity.toFixed(0)}
+              value={latestFrame?.conductivity_us_cm.toFixed(0) ?? '—'}
               unit="µS/cm"
             />
             <Metric
               label="Turbidity"
-              value={sig.water_properties.turbidity.toFixed(2)}
+              value={latestFrame?.turbidity_ntu.toFixed(2) ?? '—'}
               unit="NTU"
             />
             <Metric
               label="Temperature"
-              value={sig.water_properties.temperature.toFixed(1)}
+              value={latestFrame?.temperature_c.toFixed(1) ?? '—'}
               unit="°C"
             />
           </MetricGrid>
@@ -421,7 +431,7 @@ export function NodeDiagnostics() {
 
           <h4 className="nd-sub">Node events</h4>
           <EventTimeline
-            events={events.data?.items ?? []}
+            events={(events.data?.items ?? []).filter((event) => event.node_id === nodeId)}
             limit={4}
             chronological
             onSelect={(id) => navigate(`/events?event=${id}`)}
