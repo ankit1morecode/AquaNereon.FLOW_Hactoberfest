@@ -1,0 +1,6 @@
+.rp-analytics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--gap); }
+.rp-analytics-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.rp-analytics-table th, .rp-analytics-table td { padding: 8px 5px; text-align: left; border-bottom: 1px solid var(--panel-edge); }
+.rp-analytics-table th { color: var(--ink-dim); font-weight: 500; }
+.rp-analytics-table td { font-family: var(--mono); }
+@media (max-width: 1000px) { .rp-analytics { grid-template-columns: 1fr; } }

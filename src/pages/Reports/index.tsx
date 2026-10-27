@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useApi, useQuery } from '../../services/ApiProvider';
 import { filterReportEvents, reportFilterError, reportStatistics } from '../../services/reportFilters';
 import { buildIncidentHandoff } from '../../services/incidentHandoff';
+import { IncidentAnalytics } from './IncidentAnalytics';
 import './reports.css';
 import { EventTimeline } from '../../components/EventTimeline';
 import { BarRow, TimeSeriesChart } from '../../components/charts';
@@ -150,6 +151,8 @@ export function Reports() {
           )}
         </Panel>
       </div>
+
+      <IncidentAnalytics events={filtered} zones={zones.data ?? []} />
 
       <div className="rp-main">
         <Panel
