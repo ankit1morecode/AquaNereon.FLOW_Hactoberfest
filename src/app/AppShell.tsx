@@ -6,6 +6,8 @@ import { CommandPalette } from './CommandPalette';
 import { SimulationControls } from './SimulationControls';
 import { AlertInbox } from './AlertInbox';
 import { DataFeedStatus } from './DataFeedStatus';
+import { DisplayPreferences } from './DisplayPreferences';
+import { useApplyOperatorPreferences } from '../services/operatorPreferences';
 import { STATE_CLASS, STATE_LABEL, clockTime } from '../components/ui';
 
 /**
@@ -29,6 +31,7 @@ const NAV = [
 ];
 
 export function AppShell() {
+  useApplyOperatorPreferences();
   const client = useApi();
   const location = useLocation();
   const navigate = useNavigate();
@@ -145,7 +148,7 @@ export function AppShell() {
         <SimulationControls />
         <DataFeedStatus mode={client.mode} updatedAt={overview.updatedAt} error={overview.error}
           refreshing={overview.refreshing} onRefresh={refreshQueries} />
-        <AlertInbox /><CommandPalette />
+        <AlertInbox /><DisplayPreferences /><CommandPalette />
       </div>
 
       <main className="shell-main">
