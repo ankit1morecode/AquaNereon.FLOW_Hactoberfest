@@ -1,6 +1,7 @@
 /** @vitest-environment jsdom */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { useState } from 'react';
 import { SavedComparisonSets } from '../src/pages/NodeComparison/SavedComparisonSets';
 import { COMPARISON_SETS_KEY, createComparisonSets, parseComparisonSets } from '../src/services/comparisonSets';
 afterEach(cleanup);
@@ -61,5 +62,26 @@ describe('named comparison sets', () => {
     view.rerender(<SavedComparisonSets ids={['B', 'C']} onLoad={vi.fn()} store={store} />);
     expect((screen.getByLabelText('Saved comparison sets') as HTMLSelectElement).value).toBe('');
     expect((screen.getByRole('button', { name: 'Delete comparison set' }) as HTMLButtonElement).disabled).toBe(true);
+  });
+  it('loads and deletes a saved set with an unavailable node without rewriting its requested IDs', () => {
+    const storage = memory();
+    const store = createComparisonSets(() => storage);
+    const saved = store.save('Old feeder pair', ['B', 'missing']);
+    const loaded = vi.fn();
+    function Selection() {
+      const [ids, setIds] = useState(['A', 'B']);
+      return <SavedComparisonSets ids={ids} availableIds={['A', 'B']} store={store} onLoad={(next) => { loaded(next); setIds(next); }} />;
+    }
+    render(<Selection />);
+    fireEvent.change(screen.getByLabelText('Saved comparison sets'), { target: { value: saved.id } });
+    expect(loaded).toHaveBeenCalledWith(['B', 'missing']);
+    expect((screen.getByLabelText('Saved comparison sets') as HTMLSelectElement).value).toBe(saved.id);
+    fireEvent.change(screen.getByLabelText('New comparison set name'), { target: { value: 'Incomplete selection' } });
+    expect((screen.getByRole('button', { name: 'Save comparison set' }) as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByRole('button', { name: 'Delete comparison set' }) as HTMLButtonElement).disabled).toBe(false);
+    expect(store.getSnapshot().sets[0].nodeIds).toEqual(['B', 'missing']);
+    fireEvent.click(screen.getByRole('button', { name: 'Delete comparison set' }));
+    expect(store.getSnapshot().sets).toEqual([]);
+    expect(loaded).toHaveBeenCalledTimes(1);
   });
 });

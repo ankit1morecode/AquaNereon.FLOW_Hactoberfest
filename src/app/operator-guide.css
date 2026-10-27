@@ -1,0 +1,12 @@
+.guide-dialog { width: min(740px, calc(100vw - 28px)); max-height: 84vh; padding: 0; margin: 7vh auto auto; color: var(--ink); background: var(--panel-solid); border: 1px solid var(--panel-edge-strong); border-radius: var(--r-md); }
+.guide-dialog::backdrop { background: #0009; }
+.guide-content { padding: 18px; }
+.guide-content header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 15px; }
+.guide-content h2 { font-size: 16px; margin: 0; }
+.guide-content input { width: 100%; padding: 10px; background: var(--bg); color: var(--ink); border: 1px solid var(--panel-edge-strong); border-radius: var(--r-sm); font: inherit; }
+.guide-count { margin: 10px 0; color: var(--ink-dim); font-size: 11px; }
+.guide-topics { max-height: 59vh; overflow-y: auto; }
+.guide-topics article { padding: 14px 0; border-top: 1px solid var(--panel-edge); }
+.guide-topics h3 { font-size: 14px; margin: 0 0 8px; }
+.guide-topics p { color: var(--ink-dim); line-height: 1.7; font-size: 12px; margin: 0 0 9px; }
+.guide-topics a { font-size: 12px; }

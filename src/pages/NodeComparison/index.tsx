@@ -46,7 +46,7 @@ export function NodeComparison() {
         </label>)}
         <button className="btn" type="button" onClick={() => applyIds([])}>Clear comparison</button>
       </div>
-      <SavedComparisonSets ids={selected.map((node) => node.node_id)} onLoad={applyIds} />
+      <SavedComparisonSets ids={ids} availableIds={selected.map((node) => node.node_id)} onLoad={applyIds} />
       <ComparisonCsvExport nodes={selected} source={client} error={nodes.error} />
       <p className="node-results">The address contains your selected nodes; copy it to share this comparison. Readings continue to update.</p>
       {unknown.length > 0 && <p className="node-results" role="status">Unavailable nodes: {unknown.join(', ')}. Select a replacement above.</p>}

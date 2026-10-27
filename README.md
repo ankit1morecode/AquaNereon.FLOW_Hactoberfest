@@ -61,6 +61,21 @@ The next ten features each have their own commit:
 
 The notebook, bookmarks and inbox read markers are browser-local operator aids. Notes are separate from backend event records. Telemetry and forecast exports describe only the samples or horizons returned by the API. The scenario planner performs local arithmetic and sends no network commands.
 
+## Third feature batch
+
+21. **Comparison trends**: overlay up to three nodes' loaded signature histories by actual timestamps. Switch between baseline distance, flow and pressure; partial failures and mismatched-node data are disclosed.
+22. **Named comparison sets**: save, restore, update and delete browser-local node selections while preserving the first node as the reference. Storage validation and a session fallback keep saved selections usable.
+23. **Comparison snapshot CSV**: export the currently loaded comparison rows in table order, with reference differences, design utilization, source/capture metadata and original plus UTC last-seen timestamps.
+24. **Incident report breakdowns**: severity and zone distributions plus local-calendar daily event counts follow the report's existing status/date filters and loaded-event scope.
+25. **Previous-period comparison**: compare a selected inclusive date range with the equally long preceding calendar range, up to 366 days. Show event, high-priority, closed and verified counts with explicit zero-baseline and loaded-data limitations.
+26. **Print-ready reports**: print the scoped report through the browser, with source/date/status metadata and tables that expand beyond their on-screen scroll areas. Navigation, dialogs and interactive controls stay out of the printed report.
+27. **Pipe asset inventory** (`/network`): search pipe IDs, endpoint names/addresses and zones; rank by length, diameter or design flow. Cross-zone pipes match either endpoint. Asset dimensions and source details come from the loaded network graph.
+28. **Structural topology tracing**: select a source or junction and trace upstream, downstream or both through the directed network graph. Cycle-safe traversals show the connected assets and pipes, with a derived map and shareable URL state.
+29. **Display preferences**: choose comfortable or compact panels, higher text contrast, and system/reduced/full interface animation. Changes persist in this browser with a session fallback; 3D playback remains controlled separately.
+30. **Searchable operator guide**: open Help or press `?` outside text fields to search workflows, data-scope explanations and keyboard controls, then navigate directly to the relevant screen. The 3D route retains its own help overlay.
+
+Comparison histories and exports cover loaded data. Report comparisons use incidents' current recorded statuses; the API does not expose historical acknowledgement or closure timestamps. Topology traces describe graph connectivity and do not establish measured propagation or a field isolation plan.
+
 ---
 
 ## The one idea holding it together

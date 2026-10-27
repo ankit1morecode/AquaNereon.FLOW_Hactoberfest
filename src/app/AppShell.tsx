@@ -7,6 +7,7 @@ import { SimulationControls } from './SimulationControls';
 import { AlertInbox } from './AlertInbox';
 import { DataFeedStatus } from './DataFeedStatus';
 import { DisplayPreferences } from './DisplayPreferences';
+import { OperatorGuide } from './OperatorGuide';
 import { useApplyOperatorPreferences } from '../services/operatorPreferences';
 import { STATE_CLASS, STATE_LABEL, clockTime } from '../components/ui';
 
@@ -26,6 +27,7 @@ const NAV = [
   { to: '/zones', label: 'Zone Intelligence' },
   { to: '/nodes', label: 'Nodes' },
   { to: '/compare', label: 'Compare' },
+  { to: '/network', label: 'Network' },
   { to: '/events', label: 'Events' },
   { to: '/reports', label: 'Reports' },
 ];
@@ -148,7 +150,7 @@ export function AppShell() {
         <SimulationControls />
         <DataFeedStatus mode={client.mode} updatedAt={overview.updatedAt} error={overview.error}
           refreshing={overview.refreshing} onRefresh={refreshQueries} />
-        <AlertInbox /><DisplayPreferences /><CommandPalette />
+        <AlertInbox /><DisplayPreferences /><OperatorGuide /><CommandPalette />
       </div>
 
       <main className="shell-main">

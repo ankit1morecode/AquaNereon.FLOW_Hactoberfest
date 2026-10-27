@@ -15,6 +15,7 @@ const PAGES: NavigationCommand[] = [
   { id: 'zones', label: 'Zone Intelligence', detail: 'Demand and losses', to: '/zones' },
   { id: 'nodes', label: 'Node Directory', detail: 'Search all junctions', to: '/nodes' },
   { id: 'compare', label: 'Compare Nodes', detail: 'Side-by-side diagnostics', to: '/compare' },
+  { id: 'network', label: 'Network Inventory', detail: 'Pipes, assets and structural topology', to: '/network' },
   { id: 'events', label: 'Events', detail: 'Incidents and evidence', to: '/events' },
   { id: 'reports', label: 'Reports', detail: 'History and handoff', to: '/reports' },
   { id: 'viz', label: '3D Junction', detail: 'Interactive flow visualization', to: '/viz' },
