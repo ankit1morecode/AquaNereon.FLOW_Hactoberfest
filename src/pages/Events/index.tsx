@@ -10,6 +10,7 @@ import { EVENT_SEVERITIES, EVENT_STATUSES, filterEvents, readEventFilters, write
 import './events.css';
 import { SavedEventViews } from './SavedEventViews';
 import { EventCsvExport } from './EventCsvExport';
+import { IncidentNotebook } from './IncidentNotebook';
 
 /**
  * Event Center.
@@ -163,6 +164,8 @@ export function Events() {
             <Empty>Select an event to see the evidence it was formed from.</Empty>
           </Panel>
         )}
+
+        {selected && <IncidentNotebook eventId={selected.event_id} nodeId={selected.node_id} />}
 
         <Panel title="Recommendations" subtitle="Derived from open events" scroll>
           {(recommendations.data ?? []).length === 0 ? (
