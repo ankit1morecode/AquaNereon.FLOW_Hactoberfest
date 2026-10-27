@@ -37,6 +37,14 @@ describe('filtered event CSV exports', () => {
     expect(eventCsvCell(Number.NaN)).toBe('""');
   });
 
+  it('normalizes offset timestamps to UTC and preserves the original value for audit', () => {
+    const original = '2026-10-27T15:30:00+05:30';
+    const rows = eventsToCsv([event({ timestamp: original }), event({ event_id: 'invalid', timestamp: 'unreadable time' })]).split('\r\n');
+    expect(rows[0]).toContain('"timestamp_utc","timestamp_original"');
+    expect(rows[1].split(',').slice(4, 6)).toEqual(['"2026-10-27T10:00:00.000Z"', `"${original}"`]);
+    expect(rows[2].split(',').slice(4, 6)).toEqual(['""', '"unreadable time"']);
+  });
+
   it('neutralizes formulas and dangerous leading control characters', () => {
     for (const value of ['=HYPERLINK("x")', '+cmd', '-2+3', '@SUM(A1)', '  =SUM(A1)', '\t=SUM(A1)', '\nmalicious']) {
       expect(eventCsvCell(value).startsWith('"\'')).toBe(true);

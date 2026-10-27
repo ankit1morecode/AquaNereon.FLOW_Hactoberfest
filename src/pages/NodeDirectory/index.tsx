@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '../../services/ApiProvider';
 import { filterNodes } from '../../services/nodeDirectory';
@@ -9,14 +9,33 @@ import './nodes.css';
 
 export function NodeDirectory() {
   const [params, setParams] = useSearchParams();
+  const committedSearch = params.toString();
+  const previousSearch = useRef(committedSearch);
+  const pendingParams = useRef(new URLSearchParams(params));
+  // More than one control can change before the router commits a render.
+  // Reconcile only when the committed URL changes, preserving pending edits
+  // across unrelated live-data or watchlist renders.
+  if (previousSearch.current !== committedSearch) {
+    previousSearch.current = committedSearch;
+    pendingParams.current = new URLSearchParams(params);
+  }
   const watchlist = useWatchlist();
   const navigate = useNavigate();
   const [comparison, setComparison] = useState<string[]>([]);
   const nodes = useQuery((c) => c.getNodes(), []);
   const zones = useQuery((c) => c.getZones(), []);
+  useEffect(() => {
+    if (!nodes.data) return;
+    const available = new Set(nodes.data.map((node) => node.node_id));
+    setComparison((previous) => {
+      const next = previous.filter((id) => available.has(id));
+      return next.length === previous.length ? previous : next;
+    });
+  }, [nodes.data]);
   const update = (key: string, value: string) => {
-    const next = new URLSearchParams(params);
+    const next = new URLSearchParams(pendingParams.current);
     if (value) next.set(key, value); else next.delete(key);
+    pendingParams.current = next;
     setParams(next, { replace: true });
   };
   if (nodes.error) return <ErrorNote error={nodes.error} />;
@@ -39,8 +58,9 @@ export function NodeDirectory() {
             <option value="id">Node ID</option><option value="anomaly">Highest anomaly</option><option value="flow">Highest flow</option>
           </select></label>
           <label className="node-check"><input type="checkbox" checked={params.get('watchlist') === '1'} onChange={(e) => update('watchlist', e.target.checked ? '1' : '')} />Watchlisted only ({watchlist.ids.length})</label>
-          <button type="button" className="btn" onClick={() => setParams({})}>Clear filters</button>
+          <button type="button" className="btn" onClick={() => { const next = new URLSearchParams(); pendingParams.current = next; setParams(next); }}>Clear filters</button>
           <button type="button" className="btn" disabled={comparison.length < 2} onClick={() => navigate(comparisonUrl(comparison))}>Compare selected ({comparison.length}/3)</button>
+          {comparison.length > 0 && <button type="button" className="btn" onClick={() => setComparison([])}>Clear selected</button>}
         </div>
         <p className="node-results" role="status">{filtered.length} of {nodes.data.length} nodes</p>
         {!watchlist.persisted && <p className="node-results" role="status">Browser storage is unavailable. Your watchlist is kept for this session.</p>}

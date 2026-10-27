@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useApi, useQuery, usePlatform } from '../../services/ApiProvider';
 import { EventTimeline } from '../../components/EventTimeline';
@@ -22,12 +22,20 @@ import { EventCsvExport } from './EventCsvExport';
 
 export function Events() {
   const [params, setParams] = useSearchParams();
+  // Router navigations can be batched. Keep pending edits so fast changes to
+  // different controls do not overwrite a URL update that has not rendered yet.
+  const pendingParams = useRef(params);
+  useEffect(() => { pendingParams.current = params; }, [params]);
   const navigate = useNavigate();
   const platform = usePlatform();
   const client = useApi();
 
   const filters = useMemo(() => readEventFilters(params), [params]);
-  const updateFilters = (changes: Partial<EventFilters>) => setParams(writeEventFilters(params, changes), { replace: true });
+  const updateFilters = (changes: Partial<EventFilters>) => {
+    const next = writeEventFilters(pendingParams.current, changes);
+    pendingParams.current = next;
+    setParams(next, { replace: true });
+  };
 
   const events = useQuery((c) => c.getEvents({ limit: 200 }), []);
   const recommendations = useQuery((c) => c.getRecommendations(), []);
@@ -109,7 +117,7 @@ export function Events() {
             events={filtered}
             preserveOrder
             selected={selected?.event_id ?? null}
-            onSelect={(id) => { const next = new URLSearchParams(params); next.set('event', id); setParams(next); }}
+            onSelect={(id) => { const next = new URLSearchParams(pendingParams.current); next.set('event', id); pendingParams.current = next; setParams(next); }}
             emptyNote={
               hasFilters
                 ? 'No events match this filter.'

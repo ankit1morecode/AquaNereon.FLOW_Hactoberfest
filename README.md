@@ -8,12 +8,12 @@ hydraulic visualization embedded where it belongs, on the node it describes.
 ```bash
 npm install
 npm run dev        # http://localhost:5178
-npm test           # 228 tests: physics, measurement chain, services, components
+npm test           # physics, measurement chain, services, components and operator tools
 npm run probe      # headless walk-through of the three flow scenarios
 npm run build
 ```
 
-It runs with no backend. A platform simulator advances nine nodes in the
+It runs with no backend. A platform simulator advances twenty-one nodes in the
 browser and serves them through the same `ApiClient` interface the HTTP client
 implements, which is what the dossier asks for when it says simulation must use
 the production ingestion and query contracts (§16, §30.2).
@@ -24,6 +24,25 @@ VITE_API_BASE_URL=https://backend/api/v1 npm run dev
 ```
 
 Copy `.env.example` to `.env.local` for basemap keys and the backend URL.
+
+## Ten new operator features
+
+This repository includes the current project and ten independently committed features:
+
+1. **Node directory** (`/nodes`): search IDs, locations and addresses; filter by zone or state; sort by ID, anomaly or flow. Filters stay in the URL.
+2. **Node watchlist**: star important junctions and filter to watched nodes. Saves in this browser, with session fallback when storage is unavailable.
+3. **Node comparison** (`/compare`): choose up to three nodes from the directory or comparison selectors. Live flow, anomaly and design utilization appear side by side; the first node is the reference for differences. URLs preserve the selection.
+4. **Event search and sorting**: combine search, severity, status and zone filters; order by priority, newest, oldest or anomaly. Share the URL to retain the query.
+5. **Saved event views**: save, restore, update or delete named filter combinations in this browser.
+6. **Event CSV export**: download exactly the filtered rows in their displayed order, with quoted cells and spreadsheet formula protection.
+7. **Report date range**: inclusive local calendar dates and status filters apply to incident metrics, distributions, history, linked interventions and JSON export.
+8. **Incident handoff**: export a Markdown report with source mode, selected scope, incident facts, evidence, model assessments, action recommendations and verification references.
+9. **Quick navigation**: click Search or press Ctrl+K / ⌘K to find pages and nodes. Use arrow keys, Enter and Escape inside the dialog.
+10. **Simulation playback**: pause, resume, select 1×–24× speed, or advance one simulated second while paused. Controls appear only in simulation mode and preserve the running model and history.
+
+Event tools operate on the loaded subset (up to 200 events on Events and Reports). Report scope and exported handoffs disclose the loaded and available counts. Browser-saved watchlists and views are local preferences. The platform still uses the existing API contracts for live backend data.
+
+The copied project excludes private environment files, dependencies and build output. Run `npm ci` after cloning, then `npm run dev`.
 
 ---
 
@@ -184,7 +203,7 @@ services/
 ├── client.ts             the ApiClient interface — every endpoint in §23
 ├── httpClient.ts         the real backend
 ├── simulatedClient.ts    the in-browser platform, same interface
-├── platformSimulator.ts  nine nodes, events, forecasts, risk
+├── platformSimulator.ts  twenty-one nodes, events, forecasts, risk
 ├── nodeSimulator.ts      one node, running the real physics
 ├── mqtt.ts               §24 topics, QoS, retain, and a local device bus
 └── ApiProvider.tsx       picks one client; useQuery reads from it
@@ -297,7 +316,7 @@ quadrature in the tests.
 
 ## Tests
 
-`npm test` — 228 tests. The physics and service suites run in Node with no DOM
+`npm test` — the physics and service suites run in Node with no DOM
 and no WebGL, because that layer is pure TypeScript; the component suite opts
 into jsdom with a `@vitest-environment` docblock so the fast majority stays
 fast.

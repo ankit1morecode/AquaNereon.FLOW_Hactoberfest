@@ -1,18 +1,13 @@
 import { useState } from 'react';
 import type { EventFilters } from '../../services/eventFilters';
-import { MAX_EVENT_VIEWS, readEventViews, writeEventViews, type EventViewRead, type SavedEventView } from '../../services/eventViews';
-
-function initialViews(): EventViewRead {
-  try { return readEventViews(window.localStorage); }
-  catch { return { views: [], error: 'Browser storage is unavailable. Saved views will last for this session.' }; }
-}
+import { MAX_EVENT_VIEWS, loadSavedEventViews, persistSavedEventViews, type SavedEventView } from '../../services/eventViews';
 
 function sameFilters(a: EventFilters, b: EventFilters): boolean {
   return a.q === b.q && a.severity === b.severity && a.status === b.status && a.zone === b.zone && a.sort === b.sort;
 }
 
 export function SavedEventViews({ filters, onApply }: { filters: EventFilters; onApply: (filters: EventFilters) => void }) {
-  const [saved, setSaved] = useState(initialViews);
+  const [saved, setSaved] = useState(loadSavedEventViews);
   const [name, setName] = useState('');
   const [notice, setNotice] = useState('');
   const [selectedId, setSelectedId] = useState('');
@@ -20,8 +15,7 @@ export function SavedEventViews({ filters, onApply }: { filters: EventFilters; o
     ?? saved.views.find((view) => sameFilters(view.filters, filters));
 
   const persist = (views: SavedEventView[], message: string) => {
-    let stored = false;
-    try { stored = writeEventViews(window.localStorage, views); } catch { /* Storage accessor can itself be denied. */ }
+    const stored = persistSavedEventViews(views);
     setSaved({ views, error: null });
     setNotice(stored ? message : `${message} Browser storage is unavailable; changes last for this session.`);
   };

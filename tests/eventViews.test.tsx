@@ -2,10 +2,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { readEventFilters } from '../src/services/eventFilters';
-import { EVENT_VIEWS_KEY, readEventViews, writeEventViews } from '../src/services/eventViews';
+import { EVENT_VIEWS_KEY, persistSavedEventViews, readEventViews, writeEventViews } from '../src/services/eventViews';
 import { SavedEventViews } from '../src/pages/Events/SavedEventViews';
 
-beforeEach(() => localStorage.clear());
+beforeEach(() => { localStorage.clear(); persistSavedEventViews([]); });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 
 describe('saved event filter views', () => {
@@ -58,12 +58,36 @@ describe('saved event filter views', () => {
 
   it('keeps session functionality when browser storage fails', () => {
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('Quota'); });
-    render(<SavedEventViews filters={readEventFilters(new URLSearchParams())} onApply={vi.fn()} />);
+    const filters = readEventFilters(new URLSearchParams());
+    const { unmount } = render(<SavedEventViews filters={filters} onApply={vi.fn()} />);
     fireEvent.change(screen.getByLabelText('New event view name'), { target: { value: 'Session view' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save view' }));
     expect(screen.getByRole('status').textContent).toContain('changes last for this session');
     expect(screen.getByRole('option', { name: 'Session view' })).toBeDefined();
+    unmount();
+    render(<SavedEventViews filters={filters} onApply={vi.fn()} />);
+    expect(screen.getByRole('option', { name: 'Session view' })).toBeDefined();
+    expect(screen.getByRole('status').textContent).toContain('last for this session');
     expect(writeEventViews(localStorage, [])).toBe(false);
     expect(readEventViews({ getItem: () => { throw new Error('Denied'); } }).error).toBeTruthy();
+  });
+
+  it('retains saved views and deletions across remounts when the localStorage accessor is blocked', () => {
+    vi.spyOn(window, 'localStorage', 'get').mockImplementation(() => { throw new Error('Access denied'); });
+    const filters = readEventFilters(new URLSearchParams('severity=HIGH'));
+    const onApply = vi.fn();
+    const { unmount } = render(<SavedEventViews filters={filters} onApply={onApply} />);
+    fireEvent.change(screen.getByLabelText('New event view name'), { target: { value: 'Blocked storage view' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save view' }));
+    unmount();
+    const second = render(<SavedEventViews filters={readEventFilters(new URLSearchParams())} onApply={onApply} />);
+    const option = screen.getByRole('option', { name: 'Blocked storage view' }) as HTMLOptionElement;
+    fireEvent.change(screen.getByLabelText('Load saved event view'), { target: { value: option.value } });
+    expect(onApply).toHaveBeenCalledWith(filters);
+    second.rerender(<SavedEventViews filters={filters} onApply={onApply} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Delete view' }));
+    second.unmount();
+    render(<SavedEventViews filters={filters} onApply={onApply} />);
+    expect(screen.queryByRole('option', { name: 'Blocked storage view' })).toBeNull();
   });
 });

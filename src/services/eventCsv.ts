@@ -9,10 +9,11 @@ export function eventCsvCell(value: string | number | undefined): string {
 
 /** Export exactly the provided query results in their visible ordering. */
 export function eventsToCsv(events: WaterEvent[]): string {
-  const headers = ['event_id', 'event_type', 'node_id', 'zone_id', 'timestamp_utc', 'severity', 'status',
+  const headers = ['event_id', 'event_type', 'node_id', 'zone_id', 'timestamp_utc', 'timestamp_original', 'severity', 'status',
     'anomaly_score', 'previous_state', 'current_state', 'confidence', 'completeness', 'suspected_origin',
     'recommended_action', 'evidence', 'intervention_id', 'verification_id'];
   const rows = events.map((event) => [event.event_id, event.event_type, event.node_id, event.zone_id,
+    Number.isFinite(Date.parse(event.timestamp)) ? new Date(event.timestamp).toISOString() : '',
     event.timestamp, event.severity, event.status, event.anomaly_score, event.state_transition.from,
     event.state_transition.to, event.data_quality.confidence, event.data_quality.completeness,
     event.suspected_origin?.description, event.recommended_action?.action,

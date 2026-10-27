@@ -5,6 +5,40 @@ export const MAX_EVENT_VIEWS = 12;
 export interface SavedEventView { id: string; name: string; filters: EventFilters }
 export interface EventViewRead { views: SavedEventView[]; error: string | null }
 
+let sessionViews: SavedEventView[] = [];
+let sessionOnly = false;
+const sessionMessage = 'Browser storage is unavailable. Saved views will last for this session.';
+const copyViews = (views: SavedEventView[]): SavedEventView[] => views.map((view) => ({ ...view, filters: { ...view.filters } }));
+
+/** Keep the latest session state across route unmounts, even when localStorage itself is denied. */
+export function loadSavedEventViews(): EventViewRead {
+  if (sessionOnly) return { views: copyViews(sessionViews), error: sessionMessage };
+  try {
+    const saved = readEventViews(window.localStorage);
+    if (saved.error) {
+      sessionOnly = true;
+      return { views: copyViews(sessionViews), error: saved.error };
+    }
+    sessionViews = copyViews(saved.views);
+    return saved;
+  } catch {
+    sessionOnly = true;
+    return { views: copyViews(sessionViews), error: sessionMessage };
+  }
+}
+
+export function persistSavedEventViews(views: SavedEventView[]): boolean {
+  sessionViews = copyViews(views.slice(0, MAX_EVENT_VIEWS));
+  try {
+    const stored = writeEventViews(window.localStorage, sessionViews);
+    sessionOnly = !stored;
+    return stored;
+  } catch {
+    sessionOnly = true;
+    return false;
+  }
+}
+
 export function readEventViews(storage: Pick<Storage, 'getItem'>): EventViewRead {
   try {
     const raw = storage.getItem(EVENT_VIEWS_KEY);

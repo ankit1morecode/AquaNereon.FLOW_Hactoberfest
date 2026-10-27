@@ -1,0 +1,16 @@
+.simulation-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; font-size: 11px; }
+.simulation-clock { min-width: 92px; font: 11px var(--mono); color: var(--a); }
+.simulation-controls label { display: flex; align-items: center; gap: 6px; color: var(--ink-dim); }
+.simulation-controls select { padding: 4px 7px; border: 1px solid var(--panel-edge); border-radius: var(--r-sm); background: var(--bg); color: var(--ink); }
+.simulation-controls .btn { font-size: 11px; padding: 4px 9px; }
+@media (max-width: 1500px) {
+  .shell .shell-bar { height: auto; flex-wrap: wrap; gap: 10px; padding: 8px 12px; }
+  .shell .shell-nav { flex: 1 0 100%; order: 3; width: 100%; min-width: 0; overflow-x: auto; }
+  .shell .shell-status { margin-left: auto; }
+}
+@media (max-width: 560px) {
+  .shell .brand-sub { display: none; }
+  .operator-tools { padding: 7px 10px; }
+  .simulation-controls { gap: 6px; }
+  .simulation-clock { min-width: 84px; }
+}

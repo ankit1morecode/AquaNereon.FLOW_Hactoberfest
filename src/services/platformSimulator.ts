@@ -95,7 +95,7 @@ export class PlatformSimulator {
   private readonly recommendations: Recommendation[] = [];
   private readonly listeners = new Set<() => void>();
   private readonly rng = makeRng(0x4e1de0);
-  private readonly timeScale: number;
+  private timeScale: number;
   private readonly tickHz: number;
   private timer: ReturnType<typeof setInterval> | null = null;
   private started = false;
@@ -231,14 +231,36 @@ export class PlatformSimulator {
   start(): void {
     if (this.started) return;
     this.started = true;
-    const dt = this.timeScale / this.tickHz;
-    this.timer = setInterval(() => this.tick(dt), 1000 / this.tickHz);
+    this.timer = setInterval(() => this.tick(this.timeScale / this.tickHz), 1000 / this.tickHz);
+    this.notify();
   }
 
   stop(): void {
+    const wasRunning = this.started;
     if (this.timer) clearInterval(this.timer);
     this.timer = null;
     this.started = false;
+    if (wasRunning) this.notify();
+  }
+
+  get running(): boolean { return this.started; }
+  get playbackSpeed(): number { return this.timeScale; }
+
+  /** Change the simulation clock without rebuilding nodes or losing history. */
+  setPlaybackSpeed(speed: number): void {
+    if (!Number.isFinite(speed) || speed < 0.25 || speed > 60) {
+      throw new RangeError('Simulation speed must be between 0.25 and 60.');
+    }
+    if (this.timeScale === speed) return;
+    this.timeScale = speed;
+    this.notify();
+  }
+
+  /** Advance one simulated second while paused; running mode owns its clock. */
+  stepOnce(): boolean {
+    if (this.started) return false;
+    this.tick(1);
+    return true;
   }
 
   subscribe(listener: () => void): () => void {
