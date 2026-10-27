@@ -4,6 +4,7 @@ import { NetworkMap } from '../../components/NetworkMap';
 import { NodeStatus } from '../../components/NodeStatus';
 import { EventTimeline } from '../../components/EventTimeline';
 import { ForecastChart } from '../../components/ForecastChart';
+import { ScenarioPlanner } from './ScenarioPlanner';
 import { TimeSeriesChart } from '../../components/charts';
 import {
   ErrorNote,
@@ -110,6 +111,8 @@ export function ZoneIntelligence() {
           </p>
         </Panel>
       </div>
+
+      <ScenarioPlanner zone={active} />
 
       <div className="zi-main">
         <Panel title="Consumption" subtitle="Last 24 hours, one point per hour">

@@ -1,0 +1,11 @@
+.zone-scenario-controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; }
+.zone-scenario-controls label { display: grid; gap: 5px; color: var(--ink-dim); font-size: 12px; }
+.zone-scenario-controls input { width: 150px; padding: 8px 10px; background: var(--bg); color: var(--ink); border: 1px solid var(--panel-edge); border-radius: var(--r-sm); font: inherit; }
+.zone-scenario-table-wrap { overflow-x: auto; margin-top: 14px; }
+.zone-scenario-table { width: 100%; min-width: 450px; border-collapse: collapse; text-align: left; font-size: 12px; }
+.zone-scenario-table td, .zone-scenario-table th { padding: 9px 10px; border-bottom: 1px solid var(--panel-edge); }
+.zone-scenario-table th { font-weight: 400; color: var(--ink-dim); }
+.zone-scenario-table td { font-family: var(--mono); }
+.zone-scenario-note { margin-bottom: 0; color: var(--ink-dim); font-size: 11px; line-height: 1.6; }
+.zone-scenario-result { font: 12px var(--mono); }
+.zone-scenario-error { color: var(--state-disturbance); font-size: 12px; }
