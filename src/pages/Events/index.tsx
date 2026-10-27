@@ -8,6 +8,7 @@ import { Empty, ErrorNote, Loading, Panel } from '../../components/ui';
 import type { WaterEvent } from '../../types';
 import { EVENT_SEVERITIES, EVENT_STATUSES, filterEvents, readEventFilters, writeEventFilters, type EventFilters, type EventSort } from '../../services/eventFilters';
 import './events.css';
+import { SavedEventViews } from './SavedEventViews';
 
 /**
  * Event Center.
@@ -101,6 +102,7 @@ export function Events() {
               <button className="btn" type="button" disabled={!hasFilters && filters.sort === 'priority'} onClick={() => updateFilters({ q: '', severity: '', status: '', zone: '', sort: 'priority' })}>Clear filters</button>
               {events.data.total > events.data.items.length && <p className="event-tools-summary">Showing the latest {events.data.items.length} of {events.data.total} events. Search and export apply to loaded events.</p>}
             </div>
+          <SavedEventViews filters={filters} onApply={updateFilters} />
           <EventTimeline
             events={filtered}
             preserveOrder
