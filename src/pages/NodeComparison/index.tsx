@@ -1,20 +1,31 @@
+import { useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '../../services/ApiProvider';
 import { Empty, ErrorNote, Loading, Panel, StateBadge, relativeTime } from '../../components/ui';
 import { comparisonIds, designUtilization, signedDifference } from './comparison';
 import { ComparisonTrends } from './ComparisonTrends';
+import { SavedComparisonSets } from './SavedComparisonSets';
 import '../NodeDirectory/nodes.css';
 
 export function NodeComparison() {
   const [params, setParams] = useSearchParams();
   const nodes = useQuery((c) => c.getNodes(), []);
   const ids = comparisonIds(params);
-  const choose = (index: number, id: string) => {
-    const nextIds = [...ids];
-    if (id) nextIds[index] = id; else nextIds.splice(index, 1);
+  const committedIds = JSON.stringify(ids);
+  const previousIds = useRef(committedIds);
+  const pendingIds = useRef(ids);
+  if (previousIds.current !== committedIds) { previousIds.current = committedIds; pendingIds.current = ids; }
+  const applyIds = (nextIds: string[]) => {
+    const unique = [...new Set(nextIds)].filter(Boolean).slice(0, 3);
+    pendingIds.current = unique;
     const next = new URLSearchParams();
-    for (const value of [...new Set(nextIds)].filter(Boolean).slice(0, 3)) next.append('node', value);
+    for (const value of unique) next.append('node', value);
     setParams(next);
+  };
+  const choose = (index: number, id: string) => {
+    const nextIds = [...pendingIds.current];
+    if (id) nextIds[index] = id; else nextIds.splice(index, 1);
+    applyIds(nextIds);
   };
   if (nodes.error) return <ErrorNote error={nodes.error} />;
   if (!nodes.data) return <Loading what="node comparison" />;
@@ -31,8 +42,9 @@ export function NodeComparison() {
             {nodes.data!.map((node) => <option key={node.node_id} value={node.node_id} disabled={ids.includes(node.node_id) && ids[index] !== node.node_id}>{node.node_id} · {node.location.label}</option>)}
           </select>
         </label>)}
-        <button className="btn" type="button" onClick={() => setParams({})}>Clear comparison</button>
+        <button className="btn" type="button" onClick={() => applyIds([])}>Clear comparison</button>
       </div>
+      <SavedComparisonSets ids={selected.map((node) => node.node_id)} onLoad={applyIds} />
       <p className="node-results">The address contains your selected nodes; copy it to share this comparison. Readings continue to update.</p>
       {unknown.length > 0 && <p className="node-results" role="status">Unavailable nodes: {unknown.join(', ')}. Select a replacement above.</p>}
       {selected.length < 2 && <Empty>Select at least two nodes to compare. You can compare up to three.</Empty>}
