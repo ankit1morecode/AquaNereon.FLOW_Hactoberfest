@@ -1673,6 +1673,40 @@ select {
   max-height: 240px;
 }
 
+/* Keep long attention lists inside the panel instead of growing the map row. */
+.cc-attention {
+  overflow: hidden;
+}
+
+.cc-attention > .panel-head {
+  flex-shrink: 0;
+}
+
+.cc-attention > .panel-body-scroll {
+  min-height: 0;
+  max-height: clamp(240px, 40vh, 420px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ink-dim) var(--bg-raised);
+}
+
+.cc-attention > .panel-body-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.cc-attention > .panel-body-scroll::-webkit-scrollbar-track {
+  background: var(--bg-raised);
+}
+
+.cc-attention > .panel-body-scroll::-webkit-scrollbar-thumb {
+  background: var(--ink-dim);
+  border: 2px solid var(--bg-raised);
+  border-radius: 8px;
+}
+
 .cc-bottom {
   display: grid;
   grid-template-columns: 1.4fr 1fr;
